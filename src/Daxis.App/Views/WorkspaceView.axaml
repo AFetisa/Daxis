@@ -1,0 +1,500 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="using:Daxis.App"
+             x:Class="Daxis.App.Views.WorkspaceView"
+             x:DataType="app:WorkspaceTab">
+  <Panel>
+    <DockPanel>
+      <Border DockPanel.Dock="Top" Classes="banner" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+          <SelectableTextBlock Text="{Binding Error}" Classes="danger" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="Retry" Command="{Binding ReloadCommand}" Margin="12,0,6,0" />
+          <Button Grid.Column="2" Classes="ghost" Command="{Binding DismissErrorCommand}">
+            <app:Icon Data="{x:Static app:Icons.Close}" />
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- Page switch -->
+      <Border DockPanel.Dock="Top" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}"
+              BorderThickness="0,0,0,1" Padding="8,0,12,0">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <TabStrip SelectedIndex="{Binding Page}">
+            <TabStripItem Content="Overview" />
+            <TabStripItem Content="Lineage" />
+            <TabStripItem Content="Consumption" />
+            <TabStripItem Content="Refreshes" />
+            <TabStripItem Content="Memory" />
+          </TabStrip>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <TextBlock Classes="muted" FontSize="12" Text="{Binding SourcesInfo}" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <Button Classes="ghost" Command="{Binding ReloadCommand}" ToolTip.Tip="Reload">
+              <app:Icon Data="{x:Static app:Icons.Refresh}" />
+            </Button>
+            <Button Classes="ghost" x:Name="OpenWeb" ToolTip.Tip="Open in Fabric">
+              <app:Icon Data="{x:Static app:Icons.External}" />
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Panel>
+        <!-- ── Overview ─────────────────────────────────────────── -->
+        <ScrollViewer Classes="page" IsVisible="{Binding Page, Converter={x:Static app:Conv.Is}, ConverterParameter=0}">
+          <StackPanel Margin="24,20,24,32" Spacing="22">
+            <StackPanel Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="8" Height="20">
+                <Border Classes="pill brand"><TextBlock Text="Workspace" /></Border>
+                <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding ItemCount, StringFormat='{}{0} items'}" />
+              </StackPanel>
+              <TextBlock Classes="h1" Text="{Binding Workspace.DisplayName}" FontSize="20" />
+            </StackPanel>
+
+            <!-- Inventory by item type -->
+            <ItemsControl ItemsSource="{Binding Types}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="app:TypeCount">
+                  <Border Classes="card" Padding="14,12" Margin="0,0,10,10" Width="176">
+                    <StackPanel>
+                      <TextBlock Classes="label" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Count}" FontSize="24" FontWeight="Medium" LetterSpacing="-0.5" Margin="0,4,0,0" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Semantic models -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="SEMANTIC MODELS" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Text="{Binding OrphanModels, StringFormat='{}{0} without a report in this workspace. Double-click a model to open it.'}" />
+              </Grid>
+              <Border Classes="card" ClipToBounds="True">
+                <DataGrid x:Name="ModelsGrid" ItemsSource="{Binding Models}" x:CompileBindings="False" MaxHeight="360">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Model" Binding="{Binding Name}" Width="1.3*" />
+                    <DataGridTextColumn Header="Data sources" Binding="{Binding Sources}" Width="1.2*" />
+                    <DataGridTextColumn Header="Reports" Binding="{Binding ReportsText}" Width="110" />
+                    <DataGridTextColumn Header="Last refresh" Binding="{Binding LastRefresh}" Width="1.4*" />
+                    <DataGridTextColumn Header="Typical" Binding="{Binding Typical}" Width="110" />
+                    <DataGridTextColumn Header="Success" Binding="{Binding Success}" Width="100" />
+                    <DataGridTextColumn Header="Schedule" Binding="{Binding Schedule}" Width="1.6*" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </Border>
+              <TextBlock Classes="muted" Margin="4,0" IsVisible="{Binding !Models.Count}" Text="No semantic models in this workspace." />
+            </StackPanel>
+
+            <!-- Reports -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="REPORTS" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Text="{Binding ExternalReports, StringFormat='{}{0} read a model in another workspace. Double-click a report to open it.'}" />
+              </Grid>
+              <Border Classes="card" ClipToBounds="True">
+                <DataGrid x:Name="ReportsGrid" ItemsSource="{Binding Reports}" x:CompileBindings="False" MaxHeight="420">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Report" Binding="{Binding Name}" Width="1.4*" />
+                    <DataGridTextColumn Header="Semantic model" Binding="{Binding Model}" Width="1.4*" />
+                    <DataGridTextColumn Header="Model workspace" Binding="{Binding ModelWorkspace}" Width="*" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </Border>
+              <TextBlock Classes="muted" Margin="4,0" IsVisible="{Binding !Reports.Count}" Text="No reports in this workspace." />
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── Consumption: how much of each model the reports use ── -->
+        <ScrollViewer Classes="page" IsVisible="{Binding Page, Converter={x:Static app:Conv.Is}, ConverterParameter=2}">
+          <StackPanel Margin="24,20,24,32" Spacing="22">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="4">
+                <TextBlock Classes="h1" Text="Consumption" FontSize="20" />
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <ProgressBar IsIndeterminate="True" Width="48" Height="2" MinHeight="2" IsVisible="{Binding IsAnalysing}" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted" Text="{Binding UsageInfo}" TextWrapping="Wrap" />
+                </StackPanel>
+              </StackPanel>
+              <Button Grid.Column="1" Content="Scan all workspaces" Command="{Binding ScanAllWorkspacesCommand}" VerticalAlignment="Center"
+                      IsVisible="{Binding !ScannedAll}" IsEnabled="{Binding !IsAnalysing}" MinHeight="28"
+                      ToolTip.Tip="Reports in other workspaces can read these models; this finds and analyses them too" />
+            </Grid>
+
+            <UniformGrid Columns="5">
+              <UniformGrid.Styles>
+                <Style Selector="UniformGrid > Border.card">
+                  <Setter Property="Margin" Value="0,0,10,0" />
+                  <Setter Property="Padding" Value="14,12" />
+                </Style>
+                <Style Selector="TextBlock.stat">
+                  <Setter Property="FontSize" Value="24" />
+                  <Setter Property="FontWeight" Value="Medium" />
+                  <Setter Property="LetterSpacing" Value="-0.5" />
+                  <Setter Property="Margin" Value="0,4,0,0" />
+                </Style>
+              </UniformGrid.Styles>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="MODELS ANALYSED" /><TextBlock Classes="stat" Text="{Binding AnalysedModels}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="REPORTS ANALYSED" /><TextBlock Classes="stat" Text="{Binding AnalysedReports}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="VISUALS" /><TextBlock Classes="stat" Text="{Binding TotalVisuals}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="SLICERS" /><TextBlock Classes="stat" Text="{Binding TotalSlicers}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="APPLIED FILTERS" /><TextBlock Classes="stat" Text="{Binding TotalFilters}" /></StackPanel></Border>
+            </UniformGrid>
+
+            <!-- Workspace coverage + visual mix -->
+            <Grid ColumnDefinitions="3*,16,2*">
+              <Border Classes="card" Padding="18,16">
+                <StackPanel Spacing="12">
+                  <TextBlock Classes="label" Text="MODEL FIELDS USED BY REPORTS, WHOLE WORKSPACE" />
+                  <TextBlock Text="{Binding CoveragePercent}" FontSize="34" FontWeight="Medium" LetterSpacing="-1" />
+                  <app:UsageBar Height="10" Primary="{Binding ReportShare}" Secondary="{Binding ModelShare}" />
+                  <StackPanel Orientation="Horizontal" Spacing="18">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Ellipse Width="8" Height="8" Fill="{DynamicResource Brand}" VerticalAlignment="Center" />
+                      <TextBlock FontSize="12" Text="Used in reports" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Ellipse Width="8" Height="8" Fill="{DynamicResource BrandBorder}" VerticalAlignment="Center" />
+                      <TextBlock FontSize="12" Text="Model only" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Ellipse Width="8" Height="8" Fill="{DynamicResource Bg3}" Stroke="{DynamicResource BorderStrong}" VerticalAlignment="Center" />
+                      <TextBlock FontSize="12" Text="Unused" />
+                    </StackPanel>
+                  </StackPanel>
+                  <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding CoverageText}" />
+                </StackPanel>
+              </Border>
+              <Border Grid.Column="2" Classes="card" Padding="18,16">
+                <DockPanel>
+                  <TextBlock DockPanel.Dock="Top" Classes="label" Text="VISUAL TYPES" Margin="0,0,0,12" />
+                  <Panel>
+                    <ScrollViewer MaxHeight="220">
+                      <ItemsControl ItemsSource="{Binding VisualTypes}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="app:TypeShare">
+                            <StackPanel Spacing="4" Margin="0,0,8,10">
+                              <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock FontSize="12" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1" Classes="mono muted" FontSize="12" Text="{Binding Count}" />
+                              </Grid>
+                              <app:UsageBar Height="4" Primary="{Binding Share}" />
+                            </StackPanel>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </ScrollViewer>
+                    <TextBlock Classes="faint" FontSize="12" Text="No visuals analysed yet." IsVisible="{Binding !VisualTypes.Count}" />
+                  </Panel>
+                </DockPanel>
+              </Border>
+            </Grid>
+
+            <!-- Per model -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="BY SEMANTIC MODEL" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Text="Least used first. Open a model for its own Report usage, diagram and lineage." />
+              </Grid>
+              <Border Classes="card" Padding="4">
+                <ItemsControl ItemsSource="{Binding ModelUsage}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="app:ModelUsageRow">
+                      <Grid ColumnDefinitions="2*,90,3*,64,2.4*,Auto" Margin="12,8">
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontWeight="Medium" />
+                        <TextBlock Grid.Column="1" Classes="muted" FontSize="12" VerticalAlignment="Center"
+                                   Text="{Binding Reports, StringFormat='{}{0} report(s)'}" />
+                        <app:UsageBar Grid.Column="2" Height="8" Margin="0,0,14,0" VerticalAlignment="Center"
+                                      Primary="{Binding Share}" Secondary="{Binding ModelShare}" />
+                        <TextBlock Grid.Column="3" Classes="mono" VerticalAlignment="Center" Text="{Binding Percent}" />
+                        <TextBlock Grid.Column="4" Classes="muted" FontSize="12" VerticalAlignment="Center"
+                                   Text="{Binding Breakdown}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Breakdown}" />
+                        <Button Grid.Column="5" Classes="ghost model-open" Tag="{Binding Item}" ToolTip.Tip="Open model" Margin="8,0,0,0">
+                          <app:Icon Data="{x:Static app:Icons.Model}" Width="14" Height="14" />
+                        </Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+            </StackPanel>
+
+            <!-- Reports -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="REPORTS" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Text="Every report reading a model in this workspace. Double-click to open." />
+              </Grid>
+              <Border Classes="card" ClipToBounds="True">
+                <DataGrid x:Name="UsageReportsGrid" ItemsSource="{Binding ReportUsage}" x:CompileBindings="False" MaxHeight="360">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Report" Binding="{Binding Name}" Width="1.6*" MinWidth="160" />
+                    <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="1.2*" MinWidth="120" />
+                    <DataGridTextColumn Header="Workspace" Binding="{Binding WorkspaceName}" Width="1.1*" MinWidth="120" />
+                    <DataGridTextColumn Header="Pages" Binding="{Binding Pages}" Width="100" />
+                    <DataGridTextColumn Header="Visuals" Binding="{Binding Visuals}" Width="100" />
+                    <DataGridTextColumn Header="Slicers" Binding="{Binding Slicers}" Width="100" />
+                    <DataGridTextColumn Header="Filters" Binding="{Binding Filters}" Width="100" />
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="1.4*" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </Border>
+            </StackPanel>
+
+            <!-- Fields -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Classes="label" Text="FIELDS" VerticalAlignment="Center" />
+                <TabStrip Grid.Column="1" SelectedIndex="{Binding FieldFilter}" Margin="12,0">
+                  <TabStripItem Content="All" />
+                  <TabStripItem Content="Used in reports" />
+                  <TabStripItem Content="Model only" />
+                  <TabStripItem Content="Unused" />
+                </TabStrip>
+                <TextBox Grid.Column="2" Text="{Binding FieldSearch}" Watermark="Filter by model, table or field" Width="260" />
+              </Grid>
+              <Border Classes="card" ClipToBounds="True">
+                <DataGrid ItemsSource="{Binding Fields}" x:CompileBindings="False" Height="420">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="1.2*" />
+                    <DataGridTextColumn Header="Table" Binding="{Binding Table}" Width="1.1*" />
+                    <DataGridTextColumn Header="Field" Binding="{Binding Name}" Width="1.4*" />
+                    <DataGridTextColumn Header="Kind" Binding="{Binding Kind}" Width="140" />
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="140" />
+                    <DataGridTextColumn Header="Reports" Binding="{Binding Reports}" Width="104" />
+                    <DataGridTextColumn Header="Size" Binding="{Binding Size}" SortMemberPath="Bytes" Width="96" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </Border>
+              <TextBlock Classes="faint" FontSize="12" TextWrapping="Wrap"
+                         Text="Models are read over the XMLA endpoint (needs a Fabric or Premium capacity). Unused means no analysed report binds the field and nothing in its model depends on it; reports you can't read, Excel and composite-model consumers aren't counted." />
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── Refreshes: status, schedule overlaps, failures ────── -->
+        <ScrollViewer Classes="page" IsVisible="{Binding Page, Converter={x:Static app:Conv.Is}, ConverterParameter=3}">
+          <StackPanel Margin="24,20,24,32" Spacing="22">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="h1" Text="Refreshes" FontSize="20" />
+              <TextBlock Classes="muted" Text="{Binding RefreshesInfo}" />
+            </StackPanel>
+
+            <UniformGrid Columns="4">
+              <UniformGrid.Styles>
+                <Style Selector="UniformGrid > Border.card">
+                  <Setter Property="Margin" Value="0,0,10,0" />
+                  <Setter Property="Padding" Value="14,12" />
+                </Style>
+                <Style Selector="TextBlock.stat">
+                  <Setter Property="FontSize" Value="24" />
+                  <Setter Property="FontWeight" Value="Medium" />
+                  <Setter Property="LetterSpacing" Value="-0.5" />
+                  <Setter Property="Margin" Value="0,4,0,0" />
+                </Style>
+              </UniformGrid.Styles>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="ON A SCHEDULE" /><TextBlock Classes="stat" Text="{Binding ScheduledModels}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="LAST REFRESH FAILED" />
+                <TextBlock Classes="stat" Text="{Binding FailingModels}" Foreground="{DynamicResource Danger}" IsVisible="{Binding FailingModels}" />
+                <TextBlock Classes="stat" Text="0" IsVisible="{Binding !FailingModels}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="RUNNING NOW" /><TextBlock Classes="stat" Text="{Binding RunningNow}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="SUCCESS RATE" /><TextBlock Classes="stat" Text="{Binding OverallSuccess}" /></StackPanel></Border>
+            </UniformGrid>
+
+            <!-- 24-hour schedule -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="SCHEDULE, NEXT 24 HOURS" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Text="Bars last each model's typical refresh. The strip on top counts overlaps (amber = more than one at once). Dashed line = now." />
+              </Grid>
+              <Border Classes="card" Padding="12,10">
+                <Panel>
+                  <app:ScheduleTimeline Rows="{Binding Timeline}" />
+                  <TextBlock Classes="muted" Margin="4,8" Text="No models refresh on a schedule." IsVisible="{Binding !ScheduledModels}" />
+                </Panel>
+              </Border>
+              <TextBlock Classes="muted" FontSize="12" Text="{Binding PeakText}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <!-- Per model -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="BY SEMANTIC MODEL" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center" Text="Failing first." />
+              </Grid>
+              <Border Classes="card" Padding="4">
+                <ItemsControl ItemsSource="{Binding RefreshRows}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="app:ModelRefreshRow">
+                      <Grid ColumnDefinitions="1.6*,90,2*,220,Auto" Margin="12,10">
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Classes="faint" FontSize="11.5" Text="{Binding Schedule}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Schedule}" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"
+                                   Classes.danger="{Binding Failing}" />
+                        <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center" Margin="8,0">
+                          <TextBlock FontSize="12.5" Text="{Binding LastText}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Classes="muted mono" FontSize="11" Text="{Binding Stats}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <app:DurationBars Grid.Column="3" Height="34" Runs="{Binding Runs}" VerticalAlignment="Center" />
+                        <Button Grid.Column="4" Classes="ghost model-open" Tag="{Binding Item}" ToolTip.Tip="Open model" Margin="10,0,0,0" VerticalAlignment="Center">
+                          <app:Icon Data="{x:Static app:Icons.Model}" Width="14" Height="14" />
+                        </Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+            </StackPanel>
+
+            <!-- Failures -->
+            <StackPanel Spacing="8">
+              <TextBlock Classes="label" Text="RECENT FAILURES" />
+              <Border Classes="card" ClipToBounds="True">
+                <DataGrid ItemsSource="{Binding Failures}" x:CompileBindings="False" MaxHeight="360">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="When" Binding="{Binding WhenText}" SortMemberPath="When" Width="150" />
+                    <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="*" />
+                    <DataGridTextColumn Header="Error" Binding="{Binding Error}" Width="3*" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </Border>
+              <TextBlock Classes="muted" Margin="4,0" IsVisible="{Binding !Failures.Count}" Text="No failed refreshes in the recorded history." />
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── Memory: RAM per model against the capacity ────────── -->
+        <ScrollViewer Classes="page" IsVisible="{Binding Page, Converter={x:Static app:Conv.Is}, ConverterParameter=4}">
+          <StackPanel Margin="24,20,24,32" Spacing="22">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="h1" Text="Memory" FontSize="20" />
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <ProgressBar IsIndeterminate="True" Width="48" Height="2" MinHeight="2" IsVisible="{Binding IsAnalysing}" VerticalAlignment="Center" />
+                <TextBlock Classes="muted" Text="{Binding MemoryInfo}" TextWrapping="Wrap" />
+              </StackPanel>
+            </StackPanel>
+
+            <UniformGrid Columns="4">
+              <UniformGrid.Styles>
+                <Style Selector="UniformGrid > Border.card">
+                  <Setter Property="Margin" Value="0,0,10,0" />
+                  <Setter Property="Padding" Value="14,12" />
+                </Style>
+                <Style Selector="TextBlock.stat">
+                  <Setter Property="FontSize" Value="24" />
+                  <Setter Property="FontWeight" Value="Medium" />
+                  <Setter Property="LetterSpacing" Value="-0.5" />
+                  <Setter Property="Margin" Value="0,4,0,0" />
+                </Style>
+              </UniformGrid.Styles>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="WORKSPACE MEMORY" /><TextBlock Classes="stat" Text="{Binding WorkspaceMemory}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="LARGEST MODEL" />
+                <TextBlock FontSize="14" FontWeight="Medium" Margin="0,8,0,0" Text="{Binding LargestModel}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LargestModel}" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="CAPACITY" />
+                <TextBlock FontSize="14" FontWeight="Medium" Margin="0,8,0,0" Text="{Binding CapacityText}" TextTrimming="CharacterEllipsis" /></StackPanel></Border>
+              <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="IN UNUSED COLUMNS" /><TextBlock Classes="stat" Foreground="{DynamicResource BrandText}" Text="{Binding MemoryReclaim}" /></StackPanel></Border>
+            </UniformGrid>
+            <StackPanel Spacing="4" Margin="0,-12,0,0">
+              <TextBlock Classes="muted" FontSize="12" Text="{Binding CapacityNote}" TextWrapping="Wrap" />
+              <TextBlock Classes="danger" FontSize="12" IsVisible="{Binding ModelsAtRisk}"
+                         Text="{Binding ModelsAtRisk, StringFormat='{}{0} model(s) need more than the per-model limit to run a full refresh. Consider incremental refresh or trimming columns.'}" />
+            </StackPanel>
+
+            <!-- Models treemap -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="MODELS BY SIZE" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Text="Area is memory. Click a model to open it; its Memory page breaks it down by table and column." />
+              </Grid>
+              <Border Classes="card" Padding="6" Height="300">
+                <app:TreemapView x:Name="ModelsMap" Tiles="{Binding MemoryTiles}" />
+              </Border>
+            </StackPanel>
+
+            <!-- Per model against the limit -->
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Classes="label" Text="HEADROOM PER MODEL" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Text="Bar: model size, then the extra a full refresh needs, against the capacity's per-model limit (or the largest model when unknown)." />
+              </Grid>
+              <Border Classes="card" Padding="4">
+                <ItemsControl ItemsSource="{Binding MemoryModels}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="app:ModelMemoryRow">
+                      <Grid ColumnDefinitions="1.6*,96,2.4*,Auto" RowDefinitions="Auto,Auto" Margin="12,9">
+                        <TextBlock Text="{Binding Name}" FontWeight="Medium" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                   Classes.danger="{Binding AtRisk}" />
+                        <TextBlock Grid.Column="1" Classes="mono" VerticalAlignment="Center" Text="{Binding Size}" />
+                        <app:UsageBar Grid.Column="2" Height="8" VerticalAlignment="Center" Margin="0,0,12,0"
+                                      Primary="{Binding LimitShare}" Secondary="{Binding RefreshShare}" />
+                        <Button Grid.Column="3" Grid.RowSpan="2" Classes="ghost model-open" Tag="{Binding Item}" ToolTip.Tip="Open model" VerticalAlignment="Center">
+                          <app:Icon Data="{x:Static app:Icons.Model}" Width="14" Height="14" />
+                        </Button>
+                        <TextBlock Grid.Row="1" Classes="faint" FontSize="11.5" Margin="0,3,0,0" Text="{Binding Largest}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{DynamicResource BrandText}" FontSize="11.5" Margin="0,3,0,0" Text="{Binding Unused}" TextTrimming="CharacterEllipsis" Grid.ColumnSpan="1" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Classes="muted" FontSize="11.5" Margin="0,3,12,0" Text="{Binding Headroom}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Headroom}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+            </StackPanel>
+
+            <!-- Biggest tables across the workspace -->
+            <StackPanel Spacing="8">
+              <TextBlock Classes="label" Text="BIGGEST TABLES IN THE WORKSPACE" />
+              <Border Classes="card" ClipToBounds="True">
+                <DataGrid ItemsSource="{Binding TopTables}" x:CompileBindings="False" MaxHeight="420">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="*" />
+                    <DataGridTextColumn Header="Table" Binding="{Binding Table}" Width="*" />
+                    <DataGridTextColumn Header="Size" Binding="{Binding Size}" SortMemberPath="Bytes" Width="110" />
+                    <DataGridTextColumn Header="% of workspace" Binding="{Binding Percent}" SortMemberPath="Share" Width="150" />
+                  </DataGrid.Columns>
+                </DataGrid>
+              </Border>
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── Lineage ──────────────────────────────────────────── -->
+        <Panel Classes="page" IsVisible="{Binding Page, Converter={x:Static app:Conv.Is}, ConverterParameter=1}">
+          <app:GraphCanvas x:Name="LineageCanvas" Graph="{Binding Lineage}" />
+          <Border Classes="floating" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBox x:Name="LineageFind" Watermark="Find source, model or report" Width="240" MinHeight="28" />
+              <Button Classes="ghost" x:Name="LineageFit" ToolTip.Tip="Fit to view (F)">
+                <app:Icon Data="{x:Static app:Icons.Diagram}" />
+              </Button>
+            </StackPanel>
+          </Border>
+          <Border Classes="floating" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="16">
+            <TextBlock Classes="faint" FontSize="11.5"
+                       Text="Data sources → semantic models → reports · hover to trace · double-click a model to open it, a report to view it" />
+          </Border>
+        </Panel>
+      </Panel>
+    </DockPanel>
+
+    <!-- Busy overlay -->
+    <Border Background="{DynamicResource Bg1}" Opacity="0.92" IsVisible="{Binding IsBusy}">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+        <ProgressBar IsIndeterminate="True" Width="160" Height="2" MinHeight="2" />
+        <TextBlock Text="{Binding BusyText}" Classes="muted" HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

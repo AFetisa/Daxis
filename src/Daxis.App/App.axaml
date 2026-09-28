@@ -1,0 +1,41 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Daxis.App.App"
+             RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Daxis/Theme/Tokens.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <!-- Fluent re-skinned through its palette so every stock control inherits the Supabase greys. -->
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Dark"
+            Accent="#3ECF8E" RegionColor="#1C1C1C" ErrorText="#F87171"
+            BaseHigh="#EDEDED" BaseMediumHigh="#D4D4D4" BaseMedium="#A0A0A0" BaseMediumLow="#707070" BaseLow="#2E2E2E"
+            AltHigh="#1C1C1C" AltMediumHigh="#1C1C1C" AltMedium="#1C1C1C" AltMediumLow="#1C1C1C" AltLow="#1C1C1C"
+            ChromeLow="#171717" ChromeMediumLow="#1C1C1C" ChromeMedium="#232323" ChromeHigh="#3E3E3E"
+            ChromeAltLow="#EDEDED" ChromeGray="#707070" ChromeWhite="#FFFFFF" ChromeBlackHigh="#000000"
+            ChromeBlackMedium="#000000" ChromeBlackMediumLow="#000000" ChromeBlackLow="#000000"
+            ChromeDisabledHigh="#2E2E2E" ChromeDisabledLow="#707070"
+            ListLow="#232323" ListMedium="#2A2A2A" />
+        <ColorPaletteResources x:Key="Light"
+            Accent="#24B47E" RegionColor="#FFFFFF" ErrorText="#DC2626"
+            BaseHigh="#171717" BaseMediumHigh="#3A3A3A" BaseMedium="#707070" BaseMediumLow="#9A9A9A" BaseLow="#DFDFDF"
+            AltHigh="#FFFFFF" AltMediumHigh="#FFFFFF" AltMedium="#FFFFFF" AltMediumLow="#FFFFFF" AltLow="#FFFFFF"
+            ChromeLow="#F8F8F8" ChromeMediumLow="#FFFFFF" ChromeMedium="#F3F3F3" ChromeHigh="#C7C7C7"
+            ChromeAltLow="#171717" ChromeGray="#9A9A9A" ChromeWhite="#FFFFFF" ChromeBlackHigh="#000000"
+            ChromeBlackMedium="#000000" ChromeBlackMediumLow="#000000" ChromeBlackLow="#000000"
+            ChromeDisabledHigh="#DFDFDF" ChromeDisabledLow="#9A9A9A"
+            ListLow="#F3F3F3" ListMedium="#EFEFEF" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+    <StyleInclude Source="avares://Daxis/Theme/Styles.axaml" />
+  </Application.Styles>
+</Application>

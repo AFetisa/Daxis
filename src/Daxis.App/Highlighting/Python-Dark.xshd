@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="Python-Dark" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <!-- Dark palette — aligned with DESIGN.md -->
+  <Color name="Keyword" foreground="#3ECF8E" />
+  <Color name="Builtin" foreground="#8DB6F7" />
+  <Color name="String" foreground="#F2C28B" />
+  <Color name="Comment" foreground="#707070" fontStyle="italic" />
+  <Color name="Number" foreground="#F59E8B" />
+  <Color name="Decorator" foreground="#C4B0FF" />
+
+  <RuleSet>
+
+    <!-- Line comments -->
+    <Span color="Comment" begin="#" />
+
+    <!-- Triple double-quoted strings (docstrings) -->
+    <Span color="String" multiline="true">
+      <Begin>"""</Begin>
+      <End>"""</End>
+    </Span>
+
+    <!-- Triple single-quoted strings (docstrings) -->
+    <Span color="String" multiline="true">
+      <Begin>'''</Begin>
+      <End>'''</End>
+    </Span>
+
+    <!-- f-strings double-quoted -->
+    <Span color="String">
+      <Begin>f"</Begin>
+      <End>"</End>
+      <RuleSet>
+        <Span begin="\\." end=""/>
+      </RuleSet>
+    </Span>
+
+    <!-- f-strings single-quoted -->
+    <Span color="String">
+      <Begin>f'</Begin>
+      <End>'</End>
+      <RuleSet>
+        <Span begin="\\." end=""/>
+      </RuleSet>
+    </Span>
+
+    <!-- Double-quoted strings -->
+    <Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+      <RuleSet>
+        <Span begin="\\." end=""/>
+      </RuleSet>
+    </Span>
+
+    <!-- Single-quoted strings -->
+    <Span color="String">
+      <Begin>'</Begin>
+      <End>'</End>
+      <RuleSet>
+        <Span begin="\\." end=""/>
+      </RuleSet>
+    </Span>
+
+    <!-- Decorators -->
+    <Rule color="Decorator">
+      @[\w.]+
+    </Rule>
+
+    <!-- Python keywords -->
+    <Keywords color="Keyword">
+      <Word>def</Word>
+      <Word>class</Word>
+      <Word>if</Word>
+      <Word>elif</Word>
+      <Word>else</Word>
+      <Word>for</Word>
+      <Word>while</Word>
+      <Word>try</Word>
+      <Word>except</Word>
+      <Word>finally</Word>
+      <Word>with</Word>
+      <Word>as</Word>
+      <Word>import</Word>
+      <Word>from</Word>
+      <Word>return</Word>
+      <Word>yield</Word>
+      <Word>lambda</Word>
+      <Word>pass</Word>
+      <Word>break</Word>
+      <Word>continue</Word>
+      <Word>raise</Word>
+      <Word>assert</Word>
+      <Word>global</Word>
+      <Word>nonlocal</Word>
+      <Word>async</Word>
+      <Word>await</Word>
+      <Word>True</Word>
+      <Word>False</Word>
+      <Word>None</Word>
+      <Word>and</Word>
+      <Word>or</Word>
+      <Word>not</Word>
+      <Word>in</Word>
+      <Word>is</Word>
+      <Word>del</Word>
+    </Keywords>
+
+    <!-- Python built-in functions -->
+    <Keywords color="Builtin">
+      <Word>print</Word>
+      <Word>len</Word>
+      <Word>range</Word>
+      <Word>type</Word>
+      <Word>str</Word>
+      <Word>int</Word>
+      <Word>float</Word>
+      <Word>bool</Word>
+      <Word>list</Word>
+      <Word>dict</Word>
+      <Word>set</Word>
+      <Word>tuple</Word>
+      <Word>enumerate</Word>
+      <Word>zip</Word>
+      <Word>map</Word>
+      <Word>filter</Word>
+      <Word>sorted</Word>
+      <Word>reversed</Word>
+      <Word>isinstance</Word>
+      <Word>issubclass</Word>
+      <Word>hasattr</Word>
+      <Word>getattr</Word>
+      <Word>setattr</Word>
+      <Word>delattr</Word>
+      <Word>open</Word>
+      <Word>super</Word>
+      <Word>property</Word>
+      <Word>staticmethod</Word>
+      <Word>classmethod</Word>
+      <Word>abs</Word>
+      <Word>all</Word>
+      <Word>any</Word>
+      <Word>bin</Word>
+      <Word>chr</Word>
+      <Word>dir</Word>
+      <Word>divmod</Word>
+      <Word>eval</Word>
+      <Word>exec</Word>
+      <Word>format</Word>
+      <Word>frozenset</Word>
+      <Word>globals</Word>
+      <Word>hash</Word>
+      <Word>help</Word>
+      <Word>hex</Word>
+      <Word>id</Word>
+      <Word>input</Word>
+      <Word>iter</Word>
+      <Word>locals</Word>
+      <Word>max</Word>
+      <Word>min</Word>
+      <Word>next</Word>
+      <Word>object</Word>
+      <Word>oct</Word>
+      <Word>ord</Word>
+      <Word>pow</Word>
+      <Word>repr</Word>
+      <Word>round</Word>
+      <Word>slice</Word>
+      <Word>sum</Word>
+      <Word>vars</Word>
+      <Word>zip</Word>
+    </Keywords>
+
+    <!-- Numeric literals -->
+    <Rule color="Number">
+      \b(0x[0-9a-fA-F]+|0b[01]+|0o[0-7]+|\d+(\.\d*)?([eE][+-]?\d+)?[jJ]?)\b
+    </Rule>
+
+  </RuleSet>
+</SyntaxDefinition>

@@ -1,0 +1,59 @@
+<!-- Design tokens. Source of truth: /DESIGN.md. Never hardcode hex in views. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="Bg0" Color="#171717" />          <!-- chrome: top bar, sidebar, status -->
+      <SolidColorBrush x:Key="Bg1" Color="#1C1C1C" />          <!-- canvas-night: work surface -->
+      <SolidColorBrush x:Key="Bg2" Color="#232323" />          <!-- controls, raised -->
+      <SolidColorBrush x:Key="Bg3" Color="#2A2A2A" />          <!-- hover / active row -->
+      <SolidColorBrush x:Key="Border" Color="#2E2E2E" />
+      <SolidColorBrush x:Key="BorderStrong" Color="#3E3E3E" />
+      <SolidColorBrush x:Key="Fg" Color="#EDEDED" />
+      <SolidColorBrush x:Key="FgMuted" Color="#A0A0A0" />
+      <SolidColorBrush x:Key="FgFaint" Color="#707070" />
+      <SolidColorBrush x:Key="Brand" Color="#3ECF8E" />
+      <SolidColorBrush x:Key="BrandHover" Color="#24B47E" />
+      <SolidColorBrush x:Key="BrandText" Color="#3ECF8E" />
+      <SolidColorBrush x:Key="BrandSoft" Color="#1A3ECF8E" />
+      <SolidColorBrush x:Key="BrandBorder" Color="#663ECF8E" />
+      <SolidColorBrush x:Key="OnBrand" Color="#171717" />
+      <SolidColorBrush x:Key="Selection" Color="#1F3ECF8E" />
+      <SolidColorBrush x:Key="Danger" Color="#F87171" />
+      <SolidColorBrush x:Key="DangerSoft" Color="#1FF87171" />
+      <SolidColorBrush x:Key="Warning" Color="#F5B94C" />
+      <SolidColorBrush x:Key="EditorLine" Color="#08FFFFFF" />
+      <SolidColorBrush x:Key="EditorSelection" Color="#403ECF8E" />
+      <SolidColorBrush x:Key="Scrim" Color="#B3000000" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="Bg0" Color="#F8F8F8" />
+      <SolidColorBrush x:Key="Bg1" Color="#FFFFFF" />          <!-- canvas -->
+      <SolidColorBrush x:Key="Bg2" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="Bg3" Color="#EFEFEF" />          <!-- hairline-cool-2 -->
+      <SolidColorBrush x:Key="Border" Color="#DFDFDF" />       <!-- hairline -->
+      <SolidColorBrush x:Key="BorderStrong" Color="#C7C7C7" /> <!-- hairline-strong -->
+      <SolidColorBrush x:Key="Fg" Color="#171717" />           <!-- ink -->
+      <SolidColorBrush x:Key="FgMuted" Color="#707070" />      <!-- ink-mute -->
+      <SolidColorBrush x:Key="FgFaint" Color="#9A9A9A" />      <!-- ink-mute-2 -->
+      <SolidColorBrush x:Key="Brand" Color="#3ECF8E" />
+      <SolidColorBrush x:Key="BrandHover" Color="#24B47E" />
+      <SolidColorBrush x:Key="BrandText" Color="#0F8A5F" />
+      <SolidColorBrush x:Key="BrandSoft" Color="#1A3ECF8E" />
+      <SolidColorBrush x:Key="BrandBorder" Color="#8024B47E" />
+      <SolidColorBrush x:Key="OnBrand" Color="#171717" />
+      <SolidColorBrush x:Key="Selection" Color="#243ECF8E" />
+      <SolidColorBrush x:Key="Danger" Color="#DC2626" />
+      <SolidColorBrush x:Key="DangerSoft" Color="#14DC2626" />
+      <SolidColorBrush x:Key="Warning" Color="#B45309" />
+      <SolidColorBrush x:Key="EditorLine" Color="#06000000" />
+      <SolidColorBrush x:Key="EditorSelection" Color="#403ECF8E" />
+      <SolidColorBrush x:Key="Scrim" Color="#66000000" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+
+  <FontFamily x:Key="UiFont">avares://Daxis/Assets/Fonts#Inter</FontFamily>
+  <FontFamily x:Key="MonoFont">avares://Daxis/Assets/Fonts#JetBrains Mono</FontFamily>
+  <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+  <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
+</ResourceDictionary>

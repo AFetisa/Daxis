@@ -1,0 +1,249 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="DAX-Dark" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <!-- Dark palette — aligned with DESIGN.md -->
+  <Color name="Comment" foreground="#707070" fontStyle="italic" />
+  <Color name="String" foreground="#F2C28B" />
+  <Color name="Keyword" foreground="#3ECF8E" />
+  <Color name="Function" foreground="#8DB6F7" />
+  <Color name="Number" foreground="#F59E8B" />
+  <Color name="TableRef" foreground="#E4E4E4" />
+  <Color name="MeasureRef" foreground="#C4B0FF" />
+
+  <RuleSet>
+
+    <!-- Line comments: double-dash and double-slash -->
+    <Span color="Comment" begin="--" />
+    <Span color="Comment" begin="//" />
+
+    <!-- Block comments: /* ... */ -->
+    <Span color="Comment" multiline="true">
+      <Begin>/\*</Begin>
+      <End>\*/</End>
+    </Span>
+
+    <!-- Double-quoted strings -->
+    <Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+    </Span>
+
+    <!-- Single-quoted table/column references: 'TableName'[ColumnName] -->
+    <Span color="TableRef">
+      <Begin>'</Begin>
+      <End>'</End>
+    </Span>
+
+    <!-- Measure references in square brackets: [MeasureName] -->
+    <Span color="MeasureRef">
+      <Begin>\[</Begin>
+      <End>\]</End>
+    </Span>
+
+    <!-- DAX language keywords -->
+    <Keywords color="Keyword">
+      <Word>VAR</Word>
+      <Word>RETURN</Word>
+      <Word>DEFINE</Word>
+      <Word>EVALUATE</Word>
+      <Word>MEASURE</Word>
+      <Word>TABLE</Word>
+      <Word>COLUMN</Word>
+      <Word>ORDER</Word>
+      <Word>BY</Word>
+      <Word>ASC</Word>
+      <Word>DESC</Word>
+      <Word>START</Word>
+      <Word>AT</Word>
+      <Word>TRUE</Word>
+      <Word>FALSE</Word>
+      <Word>BLANK</Word>
+      <Word>IN</Word>
+      <Word>NOT</Word>
+      <Word>AND</Word>
+      <Word>OR</Word>
+    </Keywords>
+
+    <!-- DAX built-in functions -->
+    <Keywords color="Function">
+      <!-- Filter context -->
+      <Word>CALCULATE</Word>
+      <Word>CALCULATETABLE</Word>
+      <Word>FILTER</Word>
+      <Word>ALL</Word>
+      <Word>ALLEXCEPT</Word>
+      <Word>ALLNOBLANKROW</Word>
+      <Word>ALLSELECTED</Word>
+      <Word>KEEPFILTERS</Word>
+      <Word>REMOVEFILTERS</Word>
+      <Word>VALUES</Word>
+      <Word>DISTINCT</Word>
+      <Word>HASONEFILTER</Word>
+      <Word>HASONEVALUE</Word>
+      <Word>ISFILTERED</Word>
+      <Word>ISCROSSFILTERED</Word>
+      <!-- Aggregation -->
+      <Word>SUM</Word>
+      <Word>SUMX</Word>
+      <Word>AVERAGE</Word>
+      <Word>AVERAGEX</Word>
+      <Word>COUNT</Word>
+      <Word>COUNTA</Word>
+      <Word>COUNTAX</Word>
+      <Word>COUNTBLANK</Word>
+      <Word>COUNTROWS</Word>
+      <Word>COUNTX</Word>
+      <Word>DISTINCTCOUNT</Word>
+      <Word>DISTINCTCOUNTNOBLANK</Word>
+      <Word>MAX</Word>
+      <Word>MAXA</Word>
+      <Word>MAXX</Word>
+      <Word>MIN</Word>
+      <Word>MINA</Word>
+      <Word>MINX</Word>
+      <Word>PRODUCT</Word>
+      <Word>PRODUCTX</Word>
+      <!-- Logical -->
+      <Word>IF</Word>
+      <Word>IFERROR</Word>
+      <Word>SWITCH</Word>
+      <Word>COALESCE</Word>
+      <Word>ISBLANK</Word>
+      <Word>ISERROR</Word>
+      <Word>ISLOGICAL</Word>
+      <Word>ISNONTEXT</Word>
+      <Word>ISNUMBER</Word>
+      <Word>ISTEXT</Word>
+      <!-- Text -->
+      <Word>CONCATENATE</Word>
+      <Word>CONCATENATEX</Word>
+      <Word>FORMAT</Word>
+      <Word>LEFT</Word>
+      <Word>RIGHT</Word>
+      <Word>MID</Word>
+      <Word>LEN</Word>
+      <Word>UPPER</Word>
+      <Word>LOWER</Word>
+      <Word>TRIM</Word>
+      <Word>SUBSTITUTE</Word>
+      <Word>REPLACE</Word>
+      <Word>FIND</Word>
+      <Word>SEARCH</Word>
+      <Word>EXACT</Word>
+      <Word>VALUE</Word>
+      <Word>TEXT</Word>
+      <!-- Date/Time -->
+      <Word>DATE</Word>
+      <Word>DATEDIFF</Word>
+      <Word>DATEADD</Word>
+      <Word>TODAY</Word>
+      <Word>NOW</Word>
+      <Word>YEAR</Word>
+      <Word>MONTH</Word>
+      <Word>DAY</Word>
+      <Word>HOUR</Word>
+      <Word>MINUTE</Word>
+      <Word>SECOND</Word>
+      <Word>WEEKDAY</Word>
+      <Word>WEEKNUM</Word>
+      <Word>EOMONTH</Word>
+      <Word>CALENDAR</Word>
+      <Word>CALENDARAUTO</Word>
+      <!-- Time intelligence -->
+      <Word>SAMEPERIODLASTYEAR</Word>
+      <Word>DATESINPERIOD</Word>
+      <Word>DATESBETWEEN</Word>
+      <Word>DATESYTD</Word>
+      <Word>DATESQTD</Word>
+      <Word>DATESMTD</Word>
+      <Word>TOTALYTD</Word>
+      <Word>TOTALQTD</Word>
+      <Word>TOTALMTD</Word>
+      <Word>PREVIOUSYEAR</Word>
+      <Word>PREVIOUSQUARTER</Word>
+      <Word>PREVIOUSMONTH</Word>
+      <Word>PREVIOUSDAY</Word>
+      <Word>NEXTYEAR</Word>
+      <Word>NEXTQUARTER</Word>
+      <Word>NEXTMONTH</Word>
+      <Word>NEXTDAY</Word>
+      <Word>PARALLELPERIOD</Word>
+      <Word>OPENINGBALANCEYEAR</Word>
+      <Word>OPENINGBALANCEQUARTER</Word>
+      <Word>OPENINGBALANCEMONTH</Word>
+      <Word>CLOSINGBALANCEYEAR</Word>
+      <Word>CLOSINGBALANCEQUARTER</Word>
+      <Word>CLOSINGBALANCEMONTH</Word>
+      <Word>FIRSTDATE</Word>
+      <Word>LASTDATE</Word>
+      <Word>FIRSTNONBLANK</Word>
+      <Word>LASTNONBLANK</Word>
+      <!-- Table manipulation -->
+      <Word>ADDCOLUMNS</Word>
+      <Word>SELECTCOLUMNS</Word>
+      <Word>SUMMARIZE</Word>
+      <Word>SUMMARIZECOLUMNS</Word>
+      <Word>CROSSJOIN</Word>
+      <Word>UNION</Word>
+      <Word>INTERSECT</Word>
+      <Word>EXCEPT</Word>
+      <Word>GENERATE</Word>
+      <Word>GENERATEALL</Word>
+      <Word>ROW</Word>
+      <Word>TOPN</Word>
+      <Word>TOPNSKIP</Word>
+      <Word>SAMPLE</Word>
+      <!-- Relationship -->
+      <Word>RELATED</Word>
+      <Word>RELATEDTABLE</Word>
+      <Word>USERELATIONSHIP</Word>
+      <Word>CROSSFILTER</Word>
+      <!-- Math -->
+      <Word>ROUND</Word>
+      <Word>ROUNDUP</Word>
+      <Word>ROUNDDOWN</Word>
+      <Word>INT</Word>
+      <Word>TRUNC</Word>
+      <Word>ABS</Word>
+      <Word>POWER</Word>
+      <Word>SQRT</Word>
+      <Word>EXP</Word>
+      <Word>LOG</Word>
+      <Word>LOG10</Word>
+      <Word>MOD</Word>
+      <Word>DIVIDE</Word>
+      <Word>QUOTIENT</Word>
+      <Word>CEILING</Word>
+      <Word>FLOOR</Word>
+      <Word>SIGN</Word>
+      <Word>RAND</Word>
+      <Word>RANDBETWEEN</Word>
+      <!-- Information -->
+      <Word>CONTAINS</Word>
+      <Word>CONTAINSROW</Word>
+      <Word>CONTAINSSTRING</Word>
+      <Word>CONTAINSSTRINGEXACT</Word>
+      <Word>LOOKUPVALUE</Word>
+      <Word>SELECTEDVALUE</Word>
+      <Word>EARLIER</Word>
+      <Word>EARLIEST</Word>
+      <Word>USERNAME</Word>
+      <Word>USERPRINCIPALNAME</Word>
+      <!-- Statistical -->
+      <Word>STDEV</Word>
+      <Word>STDEVX</Word>
+      <Word>VARX</Word>
+      <Word>MEDIAN</Word>
+      <Word>MEDIANX</Word>
+      <Word>PERCENTILE</Word>
+      <Word>RANK</Word>
+      <Word>RANKX</Word>
+    </Keywords>
+
+    <!-- Numeric literals -->
+    <Rule color="Number">
+      \b\d+(\.\d+)?([eE][+-]?\d+)?
+    </Rule>
+
+  </RuleSet>
+</SyntaxDefinition>

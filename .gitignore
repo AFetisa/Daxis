@@ -1,0 +1,10 @@
+# Build output
+bin/
+obj/
+publish/
+.vs/
+*.user
+TestResults/
+
+# run.sh --publish output
+dist/

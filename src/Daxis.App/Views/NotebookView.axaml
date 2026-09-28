@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="using:Daxis.App"
+             xmlns:ae="using:AvaloniaEdit"
+             x:Class="Daxis.App.Views.NotebookView"
+             x:DataType="app:NotebookTab">
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+  </UserControl.KeyBindings>
+
+  <Panel>
+    <DockPanel>
+      <Border DockPanel.Dock="Top" Classes="banner" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+          <SelectableTextBlock Text="{Binding Error}" Classes="danger" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="Retry" Command="{Binding ReloadCommand}" Margin="12,0,6,0" />
+          <Button Grid.Column="2" Classes="ghost" Command="{Binding DismissErrorCommand}">
+            <app:Icon Data="{x:Static app:Icons.Close}" />
+          </Button>
+        </Grid>
+      </Border>
+
+      <Border DockPanel.Dock="Top" Padding="20,14,16,12" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="8" Height="20">
+              <Border Classes="pill brand"><TextBlock Text="Notebook" /></Border>
+              <Border Classes="pill" IsVisible="{Binding Language, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding Language}" />
+              </Border>
+              <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding CellCount, StringFormat='{}{0} cells'}" />
+            </StackPanel>
+            <TextBlock Classes="h1" Text="{Binding Title}" FontSize="20" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Bottom">
+            <TextBlock Text="{Binding Notice}" Classes="muted" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <Button Classes="ghost" Command="{Binding ReloadCommand}" ToolTip.Tip="Reload from Fabric">
+              <app:Icon Data="{x:Static app:Icons.Refresh}" />
+            </Button>
+            <Button Classes="ghost" x:Name="OpenWeb" ToolTip.Tip="Open in Fabric">
+              <app:Icon Data="{x:Static app:Icons.External}" />
+            </Button>
+            <Button Command="{Binding RunCommand}" IsEnabled="{Binding !IsRunning}" ToolTip.Tip="Run the saved notebook as a Fabric job">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <app:Icon Data="{x:Static app:Icons.Play}" Width="12" Height="12" Foreground="{DynamicResource BrandText}" />
+                <TextBlock Text="Run" />
+              </StackPanel>
+            </Button>
+            <Button Classes="primary" Content="Save changes" Command="{Binding SaveCommand}" IsEnabled="{Binding IsDirty}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Run status strip -->
+      <Border DockPanel.Dock="Bottom" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}"
+              BorderThickness="0,1,0,0" Padding="20,8"
+              IsVisible="{Binding RunStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Classes="label" Text="LAST RUN" VerticalAlignment="Center" />
+          <ProgressBar IsIndeterminate="True" Width="60" Height="2" MinHeight="2" IsVisible="{Binding IsRunning}" VerticalAlignment="Center" />
+          <SelectableTextBlock Text="{Binding RunStatus}" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
+      </Border>
+
+      <ae:TextEditor x:Name="Editor" />
+    </DockPanel>
+
+    <Border Background="{DynamicResource Bg1}" Opacity="0.92" IsVisible="{Binding IsBusy}">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+        <ProgressBar IsIndeterminate="True" Width="160" Height="2" MinHeight="2" />
+        <TextBlock Text="{Binding BusyText}" Classes="muted" HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

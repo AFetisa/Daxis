@@ -1,0 +1,223 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:Daxis.App"
+        xmlns:core="using:Daxis.Core"
+        x:Class="Daxis.App.MainWindow"
+        x:DataType="app:MainViewModel"
+        Title="Daxis" Width="1440" Height="900" MinWidth="960" MinHeight="600"
+        WindowStartupLocation="CenterScreen">
+
+  <Window.Resources>
+    <DataTemplate x:Key="ItemRowTemplate" x:DataType="app:ItemRow">
+      <Button Classes="nav" Classes.active="{Binding IsActive}" Command="{Binding OpenCommand}"
+              ToolTip.Tip="{Binding Item.Description}">
+        <StackPanel Orientation="Horizontal" Spacing="9">
+          <app:Icon Data="{Binding Icon}" Width="15" Height="15" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding Item.DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Button>
+    </DataTemplate>
+  </Window.Resources>
+
+  <Grid RowDefinitions="48,*,26">
+
+    <!-- ── Top bar: brand / workspace / item ─────────────────────────── -->
+    <Border Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="16,0,12,0">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+          <Border Width="22" Height="22" CornerRadius="6" Background="{DynamicResource Brand}">
+            <app:Icon Data="{x:Static app:Icons.Model}" Width="14" Height="14" Foreground="{DynamicResource OnBrand}" />
+          </Border>
+          <TextBlock Text="daxis" FontSize="15" FontWeight="SemiBold" LetterSpacing="-0.3" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <TextBlock Grid.Column="1" Text="/" Classes="faint" FontSize="16" Margin="14,0,4,0" VerticalAlignment="Center"
+                   IsVisible="{Binding IsSignedIn}" />
+        <!-- Type to filter (matches anywhere in the name). Selection is applied in code-behind so a half-typed
+             search never clears the current workspace. -->
+        <Panel Grid.Column="2" VerticalAlignment="Center" IsVisible="{Binding IsSignedIn}"
+               ToolTip.Tip="Switch workspace: type to search (Ctrl+K)">
+          <AutoCompleteBox x:Name="WorkspaceBox" Classes="bare" Width="280"
+                           ItemsSource="{Binding Workspaces}" FilterMode="Contains"
+                           MinimumPrefixLength="0" MinimumPopulateDelay="0" MaxDropDownHeight="440"
+                           Watermark="Search workspaces" ValueMemberBinding="{ReflectionBinding DisplayName}">
+            <AutoCompleteBox.ItemTemplate>
+              <DataTemplate x:DataType="core:Workspace">
+                <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+              </DataTemplate>
+            </AutoCompleteBox.ItemTemplate>
+          </AutoCompleteBox>
+          <app:Icon Data="{x:Static app:Icons.Search}" Width="13" Height="13" HorizontalAlignment="Right"
+                    Margin="0,0,10,0" Foreground="{DynamicResource FgFaint}" IsHitTestVisible="False" />
+        </Panel>
+        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                    IsVisible="{Binding SelectedTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <TextBlock Text="/" Classes="faint" FontSize="16" Margin="4,0,12,0" />
+          <TextBlock Text="{Binding SelectedTab.Title, FallbackValue=''}" Classes="muted" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Button Classes="ghost" Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Toggle light / dark">
+            <Panel>
+              <app:Icon Data="{x:Static app:Icons.Sun}" IsVisible="{Binding IsDark}" />
+              <app:Icon Data="{x:Static app:Icons.Moon}" IsVisible="{Binding !IsDark}" />
+            </Panel>
+          </Button>
+          <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSignedIn}" Margin="4,0,0,0">
+            <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource Bg3}"
+                    BorderBrush="{DynamicResource Border}" BorderThickness="1">
+              <TextBlock Text="{Binding Initials}" FontSize="11" FontWeight="SemiBold"
+                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="{Binding Account}" Classes="muted" VerticalAlignment="Center" MaxWidth="240"
+                       TextTrimming="CharacterEllipsis" />
+            <Button Classes="ghost" Command="{Binding SignOutCommand}" ToolTip.Tip="Sign out">
+              <app:Icon Data="{x:Static app:Icons.SignOut}" />
+            </Button>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ── Body ──────────────────────────────────────────────────────── -->
+    <Grid Grid.Row="1" ColumnDefinitions="264,1,*">
+
+      <!-- Sidebar -->
+      <Border Background="{DynamicResource Bg0}">
+        <Panel>
+          <!-- Signed out -->
+          <TextBlock IsVisible="{Binding !IsSignedIn}" Margin="20,24" Classes="muted" TextWrapping="Wrap" LineHeight="20"
+                     Text="Workspaces appear here once you're signed in." />
+
+          <!-- Signed in -->
+          <DockPanel IsVisible="{Binding IsSignedIn}">
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="12,12,12,8">
+              <TextBox Text="{Binding Search}" Watermark="Search items">
+                <TextBox.InnerLeftContent>
+                  <app:Icon Data="{x:Static app:Icons.Search}" Width="14" Height="14" Margin="9,0,0,0"
+                            Foreground="{DynamicResource FgFaint}" />
+                </TextBox.InnerLeftContent>
+              </TextBox>
+              <Button Grid.Column="1" Classes="ghost" Margin="4,0,0,0" Command="{Binding LoadItemsCommand}"
+                      ToolTip.Tip="Reload items">
+                <app:Icon Data="{x:Static app:Icons.Refresh}" />
+              </Button>
+            </Grid>
+            <ScrollViewer>
+              <StackPanel Margin="8,4,8,16" Spacing="2">
+                <ContentControl Content="{Binding WorkspaceRow}" ContentTemplate="{StaticResource ItemRowTemplate}"
+                                IsVisible="{Binding WorkspaceRow, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <TextBlock Classes="muted" Margin="8,12" TextWrapping="Wrap" IsVisible="{Binding !HasItems}"
+                           Text="No semantic models, notebooks or lakehouses in this workspace." />
+                <TextBlock Classes="label" Text="SEMANTIC MODELS" Margin="8,14,0,6" IsVisible="{Binding Models.Count}" />
+                <ItemsControl ItemsSource="{Binding Models}" ItemTemplate="{StaticResource ItemRowTemplate}" />
+                <TextBlock Classes="label" Text="NOTEBOOKS" Margin="8,14,0,6" IsVisible="{Binding Notebooks.Count}" />
+                <ItemsControl ItemsSource="{Binding Notebooks}" ItemTemplate="{StaticResource ItemRowTemplate}" />
+                <TextBlock Classes="label" Text="LAKEHOUSES" Margin="8,14,0,6" IsVisible="{Binding Lakehouses.Count}" />
+                <ItemsControl ItemsSource="{Binding Lakehouses}" ItemTemplate="{StaticResource ItemRowTemplate}" />
+              </StackPanel>
+            </ScrollViewer>
+          </DockPanel>
+        </Panel>
+      </Border>
+
+      <Border Grid.Column="1" Background="{DynamicResource Border}" />
+
+      <!-- Work area -->
+      <DockPanel Grid.Column="2">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}"
+                BorderThickness="0,0,0,1" IsVisible="{Binding Tabs.Count}">
+          <ListBox Classes="tabs" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="app:TabBase">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <app:Icon Data="{Binding Icon}" Width="14" Height="14" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Title}" VerticalAlignment="Center" MaxWidth="220" TextTrimming="CharacterEllipsis" />
+                  <Panel Width="22" Height="22" Classes="tabclose" Classes.dirty="{Binding IsDirty}">
+                    <Ellipse Width="7" Height="7" Fill="{DynamicResource Brand}" IsHitTestVisible="False" />
+                    <Button Classes="ghost" Padding="4" MinHeight="0" Command="{Binding CloseCommand}" ToolTip.Tip="Close">
+                      <app:Icon Data="{x:Static app:Icons.Close}" Width="12" Height="12" />
+                    </Button>
+                  </Panel>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Border>
+
+        <Panel>
+          <!-- Signed out -->
+          <StackPanel IsVisible="{Binding !IsSignedIn}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      MaxWidth="440" Spacing="14">
+            <TextBlock Classes="h1" Text="Connect to Microsoft Fabric" HorizontalAlignment="Center" />
+            <TextBlock Classes="muted" TextAlignment="Center" TextWrapping="Wrap" LineHeight="21"
+                       Text="Sign in with your organisational account. Your browser handles the login; tokens stay on this machine." />
+            <Button Classes="primary" Content="Sign in with Microsoft" Command="{Binding SignInCommand}"
+                    HorizontalAlignment="Center" Margin="0,6,0,0" Padding="16,6" />
+          </StackPanel>
+
+          <!-- Empty state -->
+          <StackPanel IsVisible="{Binding ShowEmptyState}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      MaxWidth="460" Spacing="14">
+            <TextBlock Classes="h1" Text="Pick an item to start" HorizontalAlignment="Center" />
+            <TextBlock Classes="muted" TextAlignment="Center" TextWrapping="Wrap" LineHeight="21"
+                       Text="Edit semantic model measures live over XMLA, update notebook code, and browse lakehouse tables and files." />
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,8,0,0">
+              <Border Classes="pill"><TextBlock Text="Ctrl+K  switch workspace" /></Border>
+              <Border Classes="pill"><TextBlock Text="Ctrl+S  save" /></Border>
+              <Border Classes="pill"><TextBlock Text="Ctrl+Enter  run query" /></Border>
+              <Border Classes="pill"><TextBlock Text="Ctrl+Space  IntelliSense" /></Border>
+            </StackPanel>
+          </StackPanel>
+          <ContentControl x:Name="Host" />
+
+          <!-- Confirmation for any write that isn't covered by the model review (refresh, notebook save/run) -->
+          <Border Background="{DynamicResource Scrim}"
+                  IsVisible="{Binding SelectedTab.PendingConfirm, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}">
+            <Border Classes="card" Background="{DynamicResource Bg1}" CornerRadius="12" MaxWidth="520" Padding="24,20"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 16 48 0 #40000000">
+              <StackPanel Spacing="14">
+                <TextBlock Classes="h2" FontSize="17" Text="{Binding SelectedTab.PendingConfirm.Title, FallbackValue=''}" />
+                <TextBlock Classes="muted" TextWrapping="Wrap" LineHeight="20"
+                           Text="{Binding SelectedTab.PendingConfirm.Body, FallbackValue=''}" />
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,6,0,0">
+                  <Button Content="Cancel" Command="{Binding SelectedTab.CancelPendingCommand, FallbackValue={x:Null}}" />
+                  <Button Classes="primary" Content="{Binding SelectedTab.PendingConfirm.Action, FallbackValue=''}"
+                          Command="{Binding SelectedTab.ConfirmPendingCommand, FallbackValue={x:Null}}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </Border>
+        </Panel>
+      </DockPanel>
+    </Grid>
+
+    <!-- ── Status bar ────────────────────────────────────────────────── -->
+    <Border Grid.Row="2" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}"
+            BorderThickness="0,1,0,0" Padding="14,0">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+        <Ellipse Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,8,0"
+                 Fill="{DynamicResource Brand}" IsVisible="{Binding IsSignedIn}" />
+        <Ellipse Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,8,0"
+                 Fill="{DynamicResource FgFaint}" IsVisible="{Binding !IsSignedIn}" />
+        <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" VerticalAlignment="Center"
+                   Classes="muted" Classes.danger="{Binding StatusIsError}" TextTrimming="CharacterEllipsis" />
+        <ProgressBar Grid.Column="2" IsIndeterminate="True" Width="80" MinHeight="2" Height="2" Margin="0,0,12,0"
+                     IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+        <!-- Ownership notice required by the Daxis Community License, section 3(e) -->
+        <TextBlock Grid.Column="3" Classes="faint" FontSize="11" VerticalAlignment="Center"
+                   Text="Daxis © Alexander Fetisov (Portable Labs) · Community License"
+                   ToolTip.Tip="Free for individuals, non-profits and small businesses. See LICENSE." />
+        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="10" Margin="12,0,0,0" VerticalAlignment="Center">
+          <Button Classes="link" Tag="https://github.com/AFetisa/daxis" Content="GitHub" ToolTip.Tip="Source, releases and issues" />
+          <Button Classes="link" Tag="https://www.portable-labs.com" Content="portable-labs.com" ToolTip.Tip="Portable Labs" />
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

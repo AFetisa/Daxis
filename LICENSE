@@ -1,0 +1,192 @@
+Daxis Community License 1.0
+
+Copyright (c) 2026 Alexander Fetisov (Portable Labs). All rights reserved, except as
+expressly granted below.
+
+This is a source-available licence. It is not an open-source licence.
+
+
+PLAIN-ENGLISH SUMMARY (not part of the licence; the terms below govern)
+
+  - Individuals, non-profits and small businesses: free to use, forever.
+  - Other for-profit organisations: free to use, as long as you acknowledge
+    the Licensor's ownership as described in section 4.
+  - Major consultancies: you need the Licensor's written consent first.
+  - Nobody may modify, refactor or build on the code without the Licensor's
+    written consent, except to send contributions back to the official
+    repository.
+
+
+1. DEFINITIONS
+
+  "Licensor" means Alexander Fetisov (Portable Labs), the copyright owner.
+
+  "Software" means Daxis in source or compiled form, as published by the
+  Licensor, including its documentation and media.
+
+  "You" means the individual or organisation exercising rights under this
+  licence. Use by an employee, contractor or agent on behalf of an
+  organisation is use by that organisation. An organisation includes its
+  Affiliates.
+
+  "Affiliate" means any entity that controls, is controlled by, or is under
+  common control with an organisation, where control means more than 50% of
+  the voting interests or the power to direct management.
+
+  "Individual" means a natural person using the Software for personal,
+  educational, research or hobby purposes, or for their own professional work
+  as a sole trader.
+
+  "Non-profit" means a registered charity, a not-for-profit organisation, or a
+  public or not-for-profit educational or research institution.
+
+  "Small Business" means a for-profit organisation that, together with its
+  Affiliates, has fewer than 50 people (employees plus full-time-equivalent
+  contractors) and less than AUD 10 million in total annual revenue, both
+  measured over its most recently completed financial year.
+
+  "Major Consultancy" means an organisation that, together with its
+  Affiliates:
+    (a) provides consulting, advisory, professional services, systems
+        integration, managed IT services or outsourcing to third parties as a
+        material part of its business; and
+    (b) has 1,000 or more people, or AUD 100 million or more in total annual
+        revenue.
+  Examples include (without limitation) Accenture, Deloitte, PwC, EY, KPMG,
+  Capgemini, IBM Consulting, Cognizant, Infosys, Tata Consultancy Services,
+  Wipro and their Affiliates.
+
+  "Other For-Profit Organisation" means any for-profit organisation that is
+  neither a Small Business nor a Major Consultancy.
+
+  "Modify" means to alter, adapt, translate, refactor, port, or create a
+  derivative work of the Software or any part of it, including copying any
+  part of its source code into other software.
+
+  "Contribution" means code, documentation or other material submitted to the
+  Licensor for inclusion in the official Daxis repository.
+
+
+2. LICENCE GRANT
+
+  Subject to your compliance with this licence, the Licensor grants you a
+  worldwide, royalty-free, non-exclusive, non-transferable,
+  non-sublicensable licence to:
+
+    (a) download, view and build the Software from source;
+    (b) install, run and use the unmodified Software; and
+    (c) share unmodified copies of the Software, free of charge, with this
+        licence and all notices intact.
+
+  These rights apply to Individuals, Non-profits, Small Businesses, and Other
+  For-Profit Organisations that comply with section 4. They do not apply to
+  Major Consultancies (see section 5).
+
+
+3. RESTRICTIONS
+
+  You must not, without the Licensor's prior written consent:
+
+    (a) Modify the Software, except (i) by using its documented settings and
+        environment variables, or (ii) solely to prepare a Contribution
+        submitted to the official Daxis repository;
+    (b) distribute any modified version of the Software;
+    (c) sell, rent, lease or sublicense the Software, or charge any fee for
+        it;
+    (d) offer the Software, or functionality substantially derived from it,
+        as a hosted or managed service to third parties;
+    (e) remove, alter or obscure any copyright, licence or attribution
+        notice, or the Daxis name shown in the Software; or
+    (f) use the Daxis name or logo, or the Licensor's name, to endorse or
+        promote any product or service, or to suggest an affiliation.
+
+  Forking the repository on a code-hosting platform is permitted only as far
+  as that platform's terms require, and only for viewing the code or
+  preparing Contributions. It grants no other rights.
+
+
+4. ACKNOWLEDGEMENT BY OTHER FOR-PROFIT ORGANISATIONS
+
+  An Other For-Profit Organisation may use the Software under section 2 only
+  if it acknowledges the Licensor's ownership. It must:
+
+    (a) keep all copyright and licence notices intact; and
+    (b) include the following acknowledgement in any internal or external
+        documentation, runbook, training material or presentation that
+        describes work done with the Software, or that recommends or
+        standardises its use:
+
+          "Daxis is created and owned by Alexander Fetisov (Portable Labs) and is
+           used under the Daxis Community License."
+
+
+5. MAJOR CONSULTANCIES
+
+  A Major Consultancy, and anyone acting on its behalf (including its
+  contractors and subcontractors when delivering services for it or its
+  clients), may not download, build, install, run, use or distribute the
+  Software without a separate written agreement with the Licensor.
+
+
+6. CONTRIBUTIONS
+
+  By submitting a Contribution you:
+    (a) confirm you have the right to submit it; and
+    (b) grant the Licensor a perpetual, irrevocable, worldwide, royalty-free,
+        non-exclusive licence to use, copy, modify, distribute, sublicense and
+        relicense the Contribution under any terms, as part of the Software
+        or otherwise.
+  Contributions do not give you any additional rights to the Software.
+
+
+7. OWNERSHIP AND CONSENT
+
+  The Licensor retains all right, title and interest in the Software. No
+  rights are granted except those expressly stated. No trademark rights are
+  granted.
+
+  "Written consent" and "written agreement" mean a document or email signed
+  or sent by the Licensor that expressly grants the requested rights.
+  Requests for consent, commercial licences or Major Consultancy agreements
+  can be made through the contact details on the Licensor's GitHub profile:
+  https://github.com/AFetisa
+
+
+8. TERMINATION
+
+  Your rights under this licence end automatically if you breach it. If this
+  is your first breach and you fix it within 30 days of receiving notice from
+  the Licensor, your rights are reinstated. When your rights end, you must
+  stop using the Software and delete all copies in your possession.
+
+
+9. NO WARRANTY; LIMITATION OF LIABILITY
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+  PURPOSE AND NON-INFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE
+  LICENSOR IS NOT LIABLE FOR ANY CLAIM, DAMAGES, DATA LOSS OR OTHER LIABILITY
+  ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR ITS USE, INCLUDING
+  CHANGES THE SOFTWARE MAKES TO SERVICES YOU CONNECT IT TO.
+
+  Nothing in this licence excludes, restricts or modifies any right or remedy
+  that cannot lawfully be excluded, including under the Australian Consumer
+  Law. Where liability cannot be excluded but can be limited, it is limited,
+  at the Licensor's option, to resupplying the Software or paying the cost of
+  resupplying it.
+
+
+10. THIRD-PARTY COMPONENTS
+
+  The Software uses third-party components that are licensed under their own
+  terms. Those terms, listed in THIRD-PARTY-NOTICES.md, govern those
+  components.
+
+
+11. GENERAL
+
+  This licence is governed by the laws of Victoria, Australia. The courts of
+  Victoria have non-exclusive jurisdiction. If any provision is held
+  unenforceable, the rest of the licence remains in effect. The Licensor may
+  publish new versions of this licence. Each version of the Software remains
+  available under the version it was released with.

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="M-Dark" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <!-- Dark palette, aligned with DESIGN.md -->
+  <Color name="Comment" foreground="#707070" fontStyle="italic" />
+  <Color name="String" foreground="#F2C28B" />
+  <Color name="Keyword" foreground="#3ECF8E" />
+  <Color name="Function" foreground="#8DB6F7" />
+  <Color name="Number" foreground="#F59E8B" />
+  <Color name="QuotedId" foreground="#C4B0FF" />
+  <Color name="Constant" foreground="#F59E8B" />
+
+  <RuleSet ignoreCase="false">
+    <Span color="Comment" begin="//" />
+    <Span color="Comment" multiline="true" begin="/\*" end="\*/" />
+    <Span color="QuotedId" begin="#&quot;" end="&quot;">
+      <RuleSet><Span begin="&quot;&quot;" end="" /></RuleSet>
+    </Span>
+    <Span color="String" begin="&quot;" end="&quot;">
+      <RuleSet><Span begin="&quot;&quot;" end="" /></RuleSet>
+    </Span>
+    <Keywords color="Keyword">
+      <Word>let</Word><Word>in</Word><Word>each</Word><Word>if</Word><Word>then</Word><Word>else</Word>
+      <Word>try</Word><Word>otherwise</Word><Word>error</Word><Word>and</Word><Word>or</Word><Word>not</Word>
+      <Word>as</Word><Word>is</Word><Word>meta</Word><Word>type</Word><Word>section</Word><Word>shared</Word>
+    </Keywords>
+    <Keywords color="Constant">
+      <Word>true</Word><Word>false</Word><Word>null</Word>
+    </Keywords>
+    <Rule color="Keyword">\#(?:table|date|datetime|datetimezone|duration|time|binary|infinity|nan|sections|shared)\b</Rule>
+    <Rule color="Function">\b[A-Z][A-Za-z0-9]*(?:\.[A-Z][A-Za-z0-9]*)+\b</Rule>
+    <Rule color="Number">\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b</Rule>
+  </RuleSet>
+</SyntaxDefinition>

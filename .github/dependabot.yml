@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # TOM SDK is pinned on purpose; upgrades are tested manually.
+      - dependency-name: Microsoft.AnalysisServices.NetCore.retail.amd64
+    groups:
+      avalonia:
+        patterns: ["Avalonia*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
