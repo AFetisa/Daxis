@@ -105,3 +105,19 @@ pushes from the local machine and never deletes a data-bearing item."* Update RE
 | `fabric_to_git_all.py` referenced but missing | Superseded by the Scan grid |
 
 Governance: the `Fabric_to_Git` folder holds AGL content. Nothing from it enters the Daxis repo; tests use synthetic fixtures.
+
+## Morning test checklist (live, safe workspaces only)
+Run `.\run.ps1`, sign in, open **Source control** in the sidebar.
+1. **Scan** — rows fill in; connected workspaces grouped by repo + folder; branch-workspace text; shared-branch warning; stale/attention dots. If every status says "Status unavailable" with a scope/permission message, the Power BI Desktop client lacks Git scopes → set `DAXIS_CLIENT_ID` (see README).
+2. **Changes** — make an edit in a test workspace, rescan, commit it selectively; then change something in the repo and Update from Git. Try a conflict with each policy.
+3. **Offload** — choose a folder, offload; check `<folder>/<workspace>/_offload.json`, a dashboard's metadata, a report's PBIX/definition, images byte-identical.
+4. **Repoint** (safe workspace, Admin):
+   - uncommitted change → Check blocks.
+   - clean → Back up and preview → confirm the backup folder, then **Cancel** → workspace back on the original branch, no item changed, links intact.
+   - preview again → **Switch** → items match the target branch; verify.
+   - target branch missing a lakehouse → preview shows the block, Switch disabled; Cancel restores.
+   - edit an item after the preview, then Switch → refused ("changed after the preview").
+   - kill Daxis during preview (Task Manager), restart → red recovery banner → Restore original branch.
+5. Watch in the portal: the branch link (Related branches) survives Cancel and Switch.
+
+Things the spike must confirm (documented behaviour, not yet observed): `initializeConnection` changes no items; the status read right after connecting reflects what the first update does; items only in the workspace show as `workspaceChange: Added` there.
