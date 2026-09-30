@@ -7,7 +7,8 @@ A cross-platform desktop editor for Microsoft Fabric. It edits semantic models l
 - **TOM SDK** (`Microsoft.AnalysisServices.NetCore.retail.amd64`) stays at `19.84.1` unless there is explicit approval. It connects over HTTP XMLA with `Server.AccessToken`, which works cross-platform. TCP and local PBI Desktop connections are Windows-only and out of scope.
 - **Auth:** one MSAL public client (Power BI Desktop client id, system-browser loopback). The Power BI-audience token covers the Power BI REST, Fabric REST and XMLA APIs. OneLake uses a storage-audience token.
 - **Licence:** source-available (Daxis Community License 1.0), not open source. Never call it open source, never add copyleft dependencies, and add every new third-party component to `THIRD-PARTY-NOTICES.md`.
-- **Scope:** semantic models, notebooks and lakehouses only. There is no Git integration, no local PBI Desktop and no licensing.
+- **Scope:** semantic models, notebooks, lakehouses and source control. Source control drives Fabric's own Git integration through its REST API (scan, status, commit, update, repoint) and offloads items Git can't track to a local folder. Daxis never pushes from the local machine and never deletes a data-bearing item. No local PBI Desktop and no licensing.
+- **Repoint safety:** every step that changes a workspace's Git connection is written to `RepointJournal` first, and any failure after disconnect restores the original branch. Never add a path that disconnects without a journal, or that updates without the user having seen the preview.
 - **Save safety:** model edits stay local until the user has reviewed the before/after list and clicked "Confirm & save to service". Every other write (refresh, notebook save/run) goes through `TabBase.Ask(...)`. Never add a write path that skips both.
 - **Token safety:** only `FabricClient` sends tokens, and `IsTrusted(url, scope)` allowlists hosts per audience. Never add another HTTP path with a bearer token. Browser links go through `Web.Open`, which accepts Fabric/Power BI portal links plus the two product pages (GitHub repo, portable-labs.com) only.
 - **Config:** `DAXIS_CLIENT_ID` sets your own Entra app (the default is the Power BI Desktop public client). `DAXIS_HOME` sets the data folder, for portable installs and isolated test runs.
@@ -27,12 +28,17 @@ A cross-platform desktop editor for Microsoft Fabric. It edits semantic models l
 | `src/Daxis.Core/ReportAnalysis.cs` | Report definitions (PBIR and legacy): pages, visuals, slicers, applied filters, field refs. `Coverage` classifies model fields as used in reports / model only / unused. `Dax` token-level reference finder |
 | `src/Daxis.Core/ModelHealth.cs` | Storage (VertiPaq DMVs → size per column/table) and refresh health (schedule, history, durations) |
 | `src/Daxis.Core/Treemap.cs` | Squarified treemap layout (pure maths; `TreemapView` renders it) |
+| `src/Daxis.Core/FabricGit.cs` | Fabric Git integration endpoints (partial of `FabricClient`) |
+| `src/Daxis.Core/SourceControl.cs` | Git models and parsing, freshness, branch families, tracked / data-bearing item types, switch and update impact classification, preflight, `RepointJournal` |
+| `src/Daxis.Core/Repoint.cs` | `Repointer`: backup → disconnect → connect → initialise → preview → apply or restore |
+| `src/Daxis.Core/Offload.cs` | Writes item definitions to disk in the Fabric Git layout (atomic per item, path-safe, manifest); offloads and repoint backups |
 | `src/Daxis.Core/ModelGraph.cs` | Graphs plus layout for the model diagram (relationships) and pipeline lineage (sources → staging → tables → reports) |
 | `src/Daxis.App/GraphCanvas.cs` | Pan/zoom canvas that renders a `Graph`: entrance animation, hover tracing with flowing particles, semantic zoom, drag, find |
 | `src/Daxis.App/UsageBar.cs` | Animated share bar (report usage) |
 | `src/Daxis.App/MainViewModel.cs` | Shell: sign-in, workspace, item lists, tabs, theme |
 | `src/Daxis.App/ModelTab.cs` | Semantic model view model: typed object tree, DAX/M editing, overview, diagram, lineage, report usage, review-then-save |
 | `src/Daxis.App/WorkspaceTab.cs` | Workspace overview: item inventory, models and reports, sources → models → reports lineage |
+| `src/Daxis.App/SourceControlTab.cs` | Source control view model: scan, detail, commit / update, offload, repoint, recovery, operation stepper |
 | `src/Daxis.App/Tabs.cs` | `TabBase`, `NotebookTab`, `LakehouseTab` |
 | `src/Daxis.App/Views/*` | One view per tab type. Views are cached per tab in `MainWindow` |
 | `src/Daxis.App/Editors.cs` | AvaloniaEdit setup, theme-aware highlighting and completion popup |

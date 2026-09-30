@@ -1,6 +1,6 @@
 # Source Control — Fabric Git integration in Daxis
 
-Status: planned, 2026-09-30. Supersedes the first draft (local snapshot only).
+Status: implemented on `feature/source-control` (2026-09-30), pending live testing. Supersedes the first draft (local snapshot only).
 Origin: `Fabric_to_Git` Python experiment (fab CLI export). Its review is kept at the bottom; its export
 engine becomes the **offload** feature below.
 

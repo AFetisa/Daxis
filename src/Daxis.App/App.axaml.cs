@@ -25,6 +25,10 @@ public sealed class Settings
 {
     public string? Workspace { get; set; }
     public bool Light { get; set; }
+    /// <summary>Workspace id → local folder nominated for offloads and pre-repoint backups.</summary>
+    public Dictionary<string, string> OffloadFolders { get; set; } = [];
+    public int StaleDays { get; set; } = 7;
+    public int CriticalDays { get; set; } = 30;
 
     static string FilePath => Path.Combine(AppPaths.Data, "settings.json");
 

@@ -10,6 +10,8 @@ public sealed record ItemFile(string Path, byte[] Content);
 public sealed record OffloadEntry(string ItemId, string Type, string Name, string Folder, string Method, string? Note = null)
 {
     public bool Ok => Method != Offload.Failed;
+    /// <summary>The item's content was saved (definition or PBIX), not just a descriptor. Only this counts as a backup.</summary>
+    public bool IsFullCopy => Method is Offload.Definition or Offload.Pbix;
 }
 
 public sealed record OffloadManifest(DateTimeOffset At, string WorkspaceId, string WorkspaceName, string Kind, List<OffloadEntry> Items)
@@ -132,14 +134,14 @@ public static class Offload
         using var gate = new SemaphoreSlim(4); // ponytail: fixed fan-out; the client already backs off on 429
         await Task.WhenAll(items.Select(async (item, i) =>
         {
-            await gate.WaitAsync(ct);
-            try { entries[i] = await ExportOneAsync(fabric, item, Path.Combine(dir, folders[item.Id]), folders[item.Id], ct); }
+            await gate.WaitAsync(ct).ConfigureAwait(false);
+            try { entries[i] = await ExportOneAsync(fabric, item, Path.Combine(dir, folders[item.Id]), folders[item.Id], ct).ConfigureAwait(false); }
             finally
             {
                 gate.Release();
                 progress?.Report(new OffloadProgress(Interlocked.Increment(ref done), items.Count, item.DisplayName));
             }
-        }));
+        })).ConfigureAwait(false);
         var manifest = new OffloadManifest(DateTimeOffset.UtcNow, ws.Id, ws.DisplayName, kind, [.. entries]);
         WriteManifest(dir, manifest);
         return manifest;
@@ -150,7 +152,8 @@ public static class Offload
         string? why = null;
         try
         {
-            var files = await fabric.GetDefinitionFilesAsync(item, item.Type == "SemanticModel" ? "TMDL" : null, ct);
+            // Off the UI thread from here: exports write many files.
+            var files = await fabric.GetDefinitionFilesAsync(item, item.Type == "SemanticModel" ? "TMDL" : null, ct).ConfigureAwait(false);
             WriteItem(itemDir, files);
             return new(item.Id, item.Type, item.DisplayName, folder, Definition);
         }
@@ -161,11 +164,11 @@ public static class Offload
         {
             if (item.Type == "Report")
             {
-                var pbix = await fabric.ExportReportAsync(item, ct);
+                var pbix = await fabric.ExportReportAsync(item, ct).ConfigureAwait(false);
                 WriteItem(itemDir, [new ItemFile(Sanitise(item.DisplayName) + ".pbix", pbix), Meta(item, why)]);
                 return new(item.Id, item.Type, item.DisplayName, folder, Pbix, "No item definition; exported the PBIX instead.");
             }
-            var extra = await fabric.ItemMetadataAsync(item, ct);
+            var extra = await fabric.ItemMetadataAsync(item, ct).ConfigureAwait(false);
             WriteItem(itemDir, [Meta(item, why, extra)]);
             return new(item.Id, item.Type, item.DisplayName, folder, Metadata, "No exportable definition; saved its metadata only.");
         }

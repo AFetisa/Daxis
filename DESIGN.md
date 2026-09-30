@@ -76,12 +76,16 @@ The tokens live in `src/Daxis.App/Theme/Tokens.axaml` and the component styles i
 | Graph canvas | `bg1` with a `border-strong` dot grid. Cards are `bg2` with an 8px radius and hairline; edges are `border-strong` beziers. Tracing dims everything else to 14% and draws the path in `brand-text` with `brand` particles moving in the flow direction. Zoomed out, detail fades and titles grow |
 | Floating toolbar | `bg2`, hairline, 8px radius, no shadow; top-left over a canvas, hints bottom-left |
 | Usage bar | `bg3` track, `brand` for the primary share over `brand-border` for the secondary; grows from zero |
+| Stepper | One row per step of a long operation: hollow ring (pending), pulsing brand ring (running, with a 3px determinate bar when the service reports a percentage), brand check (done), danger cross (failed). Sits in a card over a scrim; the result shows as a callout and the card closes only when nothing is running |
+| Skeleton | `bg3` bar that breathes (opacity 0.35↔1) only while its row is loading |
+| Callout | `bg2` card with hairline for explanations; `.danger` (DangerSoft + Danger) for blocks, `.warn` (Warning hairline) for warnings that need acknowledgement |
+| Status dot | 8px: brand = fresh, `Warning` = stale, `Danger` = needs attention, `fg-faint` = unknown |
 | Icons | Hand-drawn 24×24 stroke geometry at a 1.6px stroke (`Icon.cs`). No emoji, no icon fonts |
 
 ## Motion
 - Ease out, never bounce. Canvas motion is exponential easing (frame-rate independent); page switches fade in over 280ms.
 - Animate to explain: entrances stagger left to right in flow order, and particles show direction. Nothing loops while the view is idle.
-- Request frames only while something is moving.
+- Request frames only while something is moving. The only looping animations (skeleton, running step) exist only while work is in flight.
 
 ## Syntax colours
 The same roles apply to DAX and Python:

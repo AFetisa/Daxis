@@ -163,16 +163,19 @@ public sealed class RepointSafetyTests
         [
             new("1", "Report", "Kept", "Kept.Report", Offload.Definition),
             new("2", "Report", "Lost", "Lost.Report", Offload.Failed, "403"),
+            new("3", "Notebook", "Descriptor", "Descriptor.Notebook", Offload.Metadata),
         ]);
         var changes = Git.ClassifySwitch(new GitStatus(null, "r",
         [
             C("Report", "Kept", null, "Modified"),
             C("Report", "Lost", null, "Modified"),
             C("Report", "Brand new", null, "Added"),
+            C("Notebook", "Descriptor", "Added", null),
         ]));
         var preview = new RepointPreview(journal, changes, backup);
         Assert.Contains(preview.Blocks, b => b.StartsWith("Lost"));
-        Assert.Single(preview.Blocks);
+        Assert.Contains(preview.Blocks, b => b.StartsWith("Descriptor")); // metadata only is not a backup
+        Assert.Equal(2, preview.Blocks.Count);
     }
 
     [Fact]
@@ -189,6 +192,16 @@ public sealed class RepointSafetyTests
         Assert.DoesNotContain(keepMine, p => p.Name is "Mine" or "Both");
         Assert.NotNull(keepMine.Single(p => p.Name == "DW").Block);
         Assert.Contains(Git.ClassifyUpdate(status, "PreferRemote"), p => p.Name == "Both" && p.Impact == Impact.Overwrite);
+    }
+
+    [Fact]
+    public void Signature_IgnoresOrder_ButSeesNewItems()
+    {
+        var a = Git.ClassifySwitch(new GitStatus(null, "r", [C("Report", "A", null, "Modified"), C("Notebook", "B", null, "Added")]));
+        var b = Git.ClassifySwitch(new GitStatus(null, "r", [C("Notebook", "B", null, "Added"), C("Report", "A", null, "Modified")]));
+        var c = Git.ClassifySwitch(new GitStatus(null, "r", [C("Report", "A", null, "Modified"), C("Notebook", "B", null, "Added"), C("Lakehouse", "New", "Added", null)]));
+        Assert.Equal(RepointPreview.Signature(a), RepointPreview.Signature(b));
+        Assert.NotEqual(RepointPreview.Signature(a), RepointPreview.Signature(c));
     }
 
     [Theory]

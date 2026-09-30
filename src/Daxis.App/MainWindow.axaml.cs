@@ -102,6 +102,7 @@ public sealed partial class MainWindow : Window
                 ModelTab => new Views.ModelView(),
                 NotebookTab => new Views.NotebookView(),
                 WorkspaceTab => new Views.WorkspaceView(),
+                SourceControlTab => new Views.SourceControlView(),
                 _ => new Views.LakehouseView(),
             };
             view.DataContext = tab;

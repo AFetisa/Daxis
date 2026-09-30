@@ -15,6 +15,7 @@ public sealed partial class ItemRow(FabricItem item, Action<ItemRow> open) : Obs
         MainViewModel.SemanticModel => Icons.Model,
         MainViewModel.Notebook => Icons.Notebook,
         MainViewModel.WorkspaceOverview => Icons.Workspace,
+        SourceControlTab.ItemType => Icons.Branch,
         _ => Icons.Lakehouse,
     };
     [ObservableProperty] private bool _isActive;
@@ -49,6 +50,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isDark;
     [ObservableProperty] private bool _hasItems;
     [ObservableProperty] private ItemRow? _workspaceRow;
+    [ObservableProperty] private ItemRow? _sourceControlRow;
 
     public bool ShowEmptyState => IsSignedIn && Tabs.Count == 0;
     partial void OnIsSignedInChanged(bool value) => OnPropertyChanged(nameof(ShowEmptyState));
@@ -99,6 +101,7 @@ public sealed partial class MainViewModel : ObservableObject
         Workspaces.Clear();
         SetRows([]);
         WorkspaceRow = null;
+        SourceControlRow = null;
         SetStatus("Signed out");
     }
 
@@ -110,6 +113,8 @@ public sealed partial class MainViewModel : ObservableObject
         var list = await _fabric.WorkspacesAsync();
         Workspaces.Clear();
         foreach (var w in list) Workspaces.Add(w);
+        SourceControlRow = new ItemRow(new FabricItem("daxis:source-control", "Source control", SourceControlTab.ItemType,
+            "Git status of every workspace: sync, commit, offload and branch repointing", ""), Open);
         SelectedWorkspace = list.FirstOrDefault(w => w.Id == _settings.Workspace) ?? list.FirstOrDefault();
     }
 
@@ -166,6 +171,12 @@ public sealed partial class MainViewModel : ObservableObject
             SelectedTab = open;
             return;
         }
+        if (row.Item.Type == SourceControlTab.ItemType)
+        {
+            if ((SelectedWorkspace ?? Workspaces.FirstOrDefault()) is not { } any) return;
+            await Add(new SourceControlTab(row.Item, any, _fabric, _settings, () => Workspaces.ToList()));
+            return;
+        }
         // The item's own workspace, never "whatever is selected now": a model open must target exactly this item.
         if (Workspaces.FirstOrDefault(w => w.Id == row.Item.WorkspaceId) is not { } ws) return;
         TabBase tab = row.Item.Type switch
@@ -176,6 +187,11 @@ public sealed partial class MainViewModel : ObservableObject
                 id => { if (_rows.FirstOrDefault(r => r.Item.Id == id) is { } r) Open(r); }),
             _ => new LakehouseTab(row.Item, ws, _fabric),
         };
+        await Add(tab);
+    }
+
+    async Task Add(TabBase tab)
+    {
         tab.CloseRequested += OnCloseRequested;
         Tabs.Add(tab);
         SelectedTab = tab;
@@ -212,6 +228,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         foreach (var r in _rows) r.IsActive = r.Item.Id == SelectedTab?.Item.Id;
         if (WorkspaceRow is { } w) w.IsActive = w.Item.Id == SelectedTab?.Item.Id;
+        if (SourceControlRow is { } g) g.IsActive = g.Item.Id == SelectedTab?.Item.Id;
     }
 
     [RelayCommand]

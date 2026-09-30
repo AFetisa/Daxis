@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 — unreleased
+
+**Source control** — a new tab that drives Fabric Git integration across every workspace you can see.
+- Scan: Git connection, repo, folder and branch of each workspace, grouped by repo and folder; branch workspaces and their source; workspaces sharing a branch.
+- Freshness: stale (no sync for 7 days) and needs attention (30 days, never initialised, conflicts). Thresholds in `settings.json`.
+- Update from Git and Commit to Git, with the change list first, selective commits and an explicit conflict policy. Updates that would delete a lakehouse, warehouse or database are refused.
+- Offload items Git can't track to a nominated local folder, in the Fabric Git layout with a manifest. Reports without a definition are saved as PBIX, others as metadata.
+- Repoint a workspace to another branch: preflight, full local backup, preview of every add / overwrite / delete before anything changes, blocks on data-bearing deletions, automatic restore on failure, a journal that survives crashes, and branch-workspace links put back.
+- Step-by-step progress with live percentages for long service operations.
+
 ## 0.1.0 — first public release
 
 A cross-platform (Windows, Linux) desktop editor for Microsoft Fabric semantic models, notebooks and lakehouses.

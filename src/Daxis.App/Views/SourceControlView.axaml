@@ -1,0 +1,479 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="using:Daxis.App"
+             xmlns:core="using:Daxis.Core"
+             x:Class="Daxis.App.Views.SourceControlView"
+             x:DataType="app:SourceControlTab">
+
+  <UserControl.Resources>
+    <!-- One step of a running operation: ring (pulsing while active) → check / cross -->
+    <DataTemplate x:Key="StepTemplate" x:DataType="app:StepRow">
+      <Border Classes="enter" Padding="0,7">
+        <Grid ColumnDefinitions="26,*" RowDefinitions="Auto,Auto,Auto">
+          <Panel Width="18" Height="18" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,1,0,0">
+            <Ellipse Stroke="{DynamicResource BorderStrong}" StrokeThickness="1.5" IsVisible="{Binding IsPending}" />
+            <Ellipse Classes="pulse" Stroke="{DynamicResource Brand}" StrokeThickness="2" IsVisible="{Binding IsActive}" />
+            <Ellipse Width="6" Height="6" Fill="{DynamicResource Brand}" IsVisible="{Binding IsActive}" />
+            <Ellipse Fill="{DynamicResource BrandSoft}" Stroke="{DynamicResource Brand}" StrokeThickness="1.5" IsVisible="{Binding IsDone}" />
+            <app:Icon Data="{x:Static app:Icons.Check}" Width="11" Height="11" Foreground="{DynamicResource BrandText}" IsVisible="{Binding IsDone}" />
+            <Ellipse Fill="{DynamicResource DangerSoft}" Stroke="{DynamicResource Danger}" StrokeThickness="1.5" IsVisible="{Binding IsFailed}" />
+            <app:Icon Data="{x:Static app:Icons.Close}" Width="10" Height="10" Foreground="{DynamicResource Danger}" IsVisible="{Binding IsFailed}" />
+          </Panel>
+          <TextBlock Grid.Column="1" Text="{Binding Title}" Classes.muted="{Binding IsPending}" TextWrapping="Wrap" />
+          <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Detail}" Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"
+                     Classes.danger="{Binding IsFailed}"
+                     IsVisible="{Binding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <Panel Grid.Column="1" Grid.Row="2" Margin="0,6,0,0" IsVisible="{Binding IsActive}">
+            <ProgressBar Height="3" MinHeight="3" Minimum="0" Maximum="100" Value="{Binding Percent, FallbackValue=0}" IsVisible="{Binding HasPercent}" />
+            <ProgressBar Height="3" MinHeight="3" IsIndeterminate="True" IsVisible="{Binding !HasPercent}" />
+          </Panel>
+        </Grid>
+      </Border>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Panel>
+    <DockPanel>
+      <Border DockPanel.Dock="Top" Classes="banner" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid ColumnDefinitions="*,Auto">
+          <SelectableTextBlock Text="{Binding Error}" Classes="danger" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Classes="ghost" Command="{Binding DismissErrorCommand}"><app:Icon Data="{x:Static app:Icons.Close}" /></Button>
+        </Grid>
+      </Border>
+
+      <!-- Interrupted repoints: always first, never hidden -->
+      <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Recoveries}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="app:Recovery">
+            <Border Classes="banner">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <app:Icon Data="{x:Static app:Icons.Warn}" Foreground="{DynamicResource Danger}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <Button Grid.Column="2" Classes="recover" Tag="{Binding}" Margin="12,0,0,0" Content="Restore original branch…" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Header -->
+      <Border DockPanel.Dock="Top" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="24,16,16,0">
+        <StackPanel Spacing="12">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="8" Height="20">
+                <Border Classes="pill brand"><TextBlock Text="Source control" /></Border>
+                <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding ScanText}" />
+              </StackPanel>
+              <TextBlock Classes="h1" FontSize="20" Text="Git across your workspaces" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <Button Classes="ghost" Command="{Binding RescanCommand}" IsEnabled="{Binding !IsOperating}" ToolTip.Tip="Scan again">
+                <app:Icon Data="{x:Static app:Icons.Refresh}" />
+              </Button>
+              <Button Classes="ghost" x:Name="OpenWeb" ToolTip.Tip="Open the selected workspace in Fabric">
+                <app:Icon Data="{x:Static app:Icons.External}" />
+              </Button>
+            </StackPanel>
+          </Grid>
+          <ProgressBar Height="2" MinHeight="2" Minimum="0" Maximum="100" Value="{Binding ScanPercent}" IsVisible="{Binding IsScanning}" />
+
+          <!-- Summary -->
+          <UniformGrid Columns="6">
+            <UniformGrid.Styles>
+              <Style Selector="UniformGrid > Border.card">
+                <Setter Property="Margin" Value="0,0,10,0" />
+                <Setter Property="Padding" Value="12,9" />
+              </Style>
+              <Style Selector="TextBlock.stat">
+                <Setter Property="FontSize" Value="20" />
+                <Setter Property="FontWeight" Value="Medium" />
+                <Setter Property="LetterSpacing" Value="-0.4" />
+                <Setter Property="Margin" Value="0,2,0,0" />
+              </Style>
+            </UniformGrid.Styles>
+            <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="CONNECTED" /><TextBlock Classes="stat" Text="{Binding ConnectedCount}" /></StackPanel></Border>
+            <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="NOT CONNECTED" /><TextBlock Classes="stat" Text="{Binding NotConnectedCount}" /></StackPanel></Border>
+            <Border Classes="card" ToolTip.Tip="{Binding Thresholds}"><StackPanel><TextBlock Classes="label" Text="STALE" /><TextBlock Classes="stat" Foreground="{DynamicResource Warning}" Text="{Binding StaleCount}" /></StackPanel></Border>
+            <Border Classes="card" ToolTip.Tip="Conflicts, never synced, or no sync for a long time"><StackPanel><TextBlock Classes="label" Text="NEEDS ATTENTION" /><TextBlock Classes="stat" Foreground="{DynamicResource Danger}" Text="{Binding CriticalCount}" /></StackPanel></Border>
+            <Border Classes="card" ToolTip.Tip="Two or more workspaces on the same repo, folder and branch overwrite each other's commits"><StackPanel><TextBlock Classes="label" Text="SHARED BRANCH" /><TextBlock Classes="stat" Text="{Binding SharedBranchCount}" /></StackPanel></Border>
+            <Border Classes="card" ToolTip.Tip="Git details need Contributor or higher"><StackPanel><TextBlock Classes="label" Text="NO ACCESS" /><TextBlock Classes="stat" Text="{Binding NoAccessCount}" /></StackPanel></Border>
+          </UniformGrid>
+
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TabStrip SelectedIndex="{Binding Filter}">
+              <TabStripItem Content="All" />
+              <TabStripItem Content="Needs attention" />
+              <TabStripItem Content="Connected" />
+              <TabStripItem Content="Not connected" />
+            </TabStrip>
+            <TextBox Grid.Column="2" Width="240" MinHeight="28" Margin="0,0,0,6" Text="{Binding Search}" Watermark="Filter workspaces" VerticalAlignment="Center" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="*,1,500">
+        <!-- ── Scan list ─────────────────────────────────────────────── -->
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding Groups}" Margin="0,0,0,24">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="app:GitGroup">
+                <StackPanel>
+                  <Border Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="14,14,14,6">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <app:Icon Data="{x:Static app:Icons.Branch}" Width="13" Height="13" Foreground="{DynamicResource FgFaint}" VerticalAlignment="Center" />
+                      <TextBlock Classes="label" Text="{Binding Label}" VerticalAlignment="Center" />
+                      <TextBlock Classes="faint" FontSize="11" Text="{Binding Detail}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                  <ItemsControl ItemsSource="{Binding Rows}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="app:GitRow">
+                        <Button Classes="row" Classes.selected="{Binding IsSelected}" Tag="{Binding}">
+                          <Grid ColumnDefinitions="14,*,180,150,190" RowDefinitions="Auto,Auto">
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                     Fill="{Binding Freshness, Converter={x:Static app:Conv.FreshBrush}}" IsVisible="{Binding !IsLoading}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Grid.Row="1" Classes="faint" FontSize="11.5" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"
+                                       Text="{Binding RelationText}" IsVisible="{Binding RelationText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                            <!-- Skeleton while the workspace answers -->
+                            <Border Grid.Column="2" Grid.ColumnSpan="3" Classes="skeleton" Height="10" Margin="0,0,12,0" IsVisible="{Binding IsLoading}" />
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="{Binding !IsLoading}">
+                              <Border Classes="pill" Classes.warn="{Binding SharesBranch}" IsVisible="{Binding IsConnected}"
+                                      ToolTip.Tip="{Binding Repo}">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                  <app:Icon Data="{x:Static app:Icons.Branch}" Width="10" Height="10" Foreground="{DynamicResource FgMuted}" />
+                                  <TextBlock Text="{Binding Branch}" MaxWidth="130" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                              </Border>
+                              <TextBlock Classes="muted" FontSize="12" Text="{Binding StateText}" IsVisible="{Binding !IsConnected}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="3" Classes="muted" FontSize="12" VerticalAlignment="Center" IsVisible="{Binding !IsLoading}"
+                                       Text="{Binding SyncText}" ToolTip.Tip="Last sync with Git" />
+                            <TextBlock Grid.Column="4" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsVisible="{Binding !IsLoading}"
+                                       Classes="muted" Text="{Binding Counts}" ToolTip.Tip="{Binding StatusError}" />
+                            <TextBlock Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" Classes="faint" FontSize="11.5" Margin="0,2,0,0"
+                                       Text="{Binding Repo}" TextTrimming="CharacterEllipsis" IsVisible="{Binding IsConnected}" />
+                            <StackPanel Grid.Column="4" Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="0,2,0,0" IsVisible="{Binding SharesBranch}"
+                                        ToolTip.Tip="Another workspace uses the same repo, folder and branch">
+                              <app:Icon Data="{x:Static app:Icons.Warn}" Width="11" Height="11" Foreground="{DynamicResource Warning}" />
+                              <TextBlock FontSize="11.5" Foreground="{DynamicResource Warning}" Text="Shared branch" />
+                            </StackPanel>
+                          </Grid>
+                        </Button>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <Border Grid.Column="1" Background="{DynamicResource Border}" />
+
+        <!-- ── Detail ────────────────────────────────────────────────── -->
+        <Panel Grid.Column="2" Background="{DynamicResource Bg1}">
+          <StackPanel IsVisible="{Binding !HasSelection}" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="340" Spacing="10">
+            <TextBlock Classes="h2" Text="Pick a workspace" HorizontalAlignment="Center" />
+            <TextBlock Classes="muted" TextWrapping="Wrap" TextAlignment="Center" LineHeight="20"
+                       Text="See its changes, update from or commit to Git, save items Git can't track to this computer, or move it to another branch." />
+          </StackPanel>
+
+          <DockPanel IsVisible="{Binding HasSelection}">
+            <!-- Selected workspace header -->
+            <StackPanel DockPanel.Dock="Top" Margin="20,18,20,0" Spacing="6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="{Binding Selected.Freshness, Converter={x:Static app:Conv.FreshBrush}, FallbackValue={x:Null}}" />
+                <TextBlock Classes="muted" FontSize="12" VerticalAlignment="Center"
+                           Text="{Binding Selected.Freshness, Converter={x:Static app:Conv.FreshText}, FallbackValue=''}" />
+                <TextBlock Classes="faint" FontSize="12" VerticalAlignment="Center" Text="{Binding Selected.StateText, FallbackValue=''}" />
+                <Ellipse Classes="pulse" Width="6" Height="6" Fill="{DynamicResource Brand}" VerticalAlignment="Center" IsVisible="{Binding IsLoadingDetail}"
+                         ToolTip.Tip="Loading workspace items" />
+              </StackPanel>
+              <TextBlock Classes="h2" FontSize="17" Text="{Binding Selected.Name, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" IsVisible="{Binding SelectedConnected}">
+                <Grid.Styles>
+                  <Style Selector="TextBlock"><Setter Property="FontSize" Value="12" /><Setter Property="Margin" Value="0,1" /></Style>
+                </Grid.Styles>
+                <TextBlock Classes="faint" Text="Branch" Margin="0,1,14,1" />
+                <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Selected.Branch, FallbackValue=''}" />
+                <TextBlock Grid.Row="1" Classes="faint" Text="Repo" Margin="0,1,14,1" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Classes="mono" Text="{Binding Selected.Repo, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Row="2" Classes="faint" Text="Last sync" Margin="0,1,14,1" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Selected.SyncText, FallbackValue=''}" />
+              </Grid>
+              <Border Classes="callout warn" IsVisible="{Binding Selected.SharesBranch, FallbackValue=False}" Margin="0,4,0,0">
+                <TextBlock TextWrapping="Wrap" FontSize="12" Text="Another workspace is connected to the same repo, folder and branch. Their commits overwrite each other; give each workspace its own branch." />
+              </Border>
+            </StackPanel>
+
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Margin="0,10,0,0" Padding="12,0">
+              <TabStrip SelectedIndex="{Binding DetailPage}">
+                <TabStripItem Content="Changes" IsEnabled="{Binding SelectedConnected}" />
+                <TabStripItem Content="Offload" />
+                <TabStripItem Content="Repoint" IsEnabled="{Binding SelectedConnected}" />
+              </TabStrip>
+            </Border>
+
+            <Border DockPanel.Dock="Top" Classes="callout danger" Margin="20,12,20,0" IsVisible="{Binding DetailError, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <SelectableTextBlock Text="{Binding DetailError}" TextWrapping="Wrap" FontSize="12" />
+            </Border>
+
+            <Panel>
+              <!-- ── Changes ─────────────────────────────── -->
+              <DockPanel Classes="page" Margin="20,14,20,16" IsVisible="{Binding DetailPage, Converter={x:Static app:Conv.Is}, ConverterParameter=0}">
+                <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,10">
+                  <TextBlock Classes="muted" Text="{Binding ChangesSummary}" TextWrapping="Wrap" />
+                  <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasConflicts}">
+                    <TextBlock Text="Conflicts" VerticalAlignment="Center" Classes="muted" />
+                    <ComboBox SelectedIndex="{Binding ConflictPolicy}" Width="250">
+                      <ComboBoxItem Content="Stop: resolve them in Fabric" />
+                      <ComboBoxItem Content="Keep the workspace version" />
+                      <ComboBoxItem Content="Take the Git version" />
+                    </ComboBox>
+                  </StackPanel>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
+                  <TextBox Text="{Binding CommitMessage}" Watermark="Commit message" MaxLength="300" />
+                  <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button Classes.primary="{Binding UpdateIsPrimary}" Command="{Binding UpdateFromGitCommand}" IsEnabled="{Binding CanUpdate}"
+                            ToolTip.Tip="Bring incoming commits from the branch into the workspace">
+                      <StackPanel Orientation="Horizontal" Spacing="6"><app:Icon Data="{x:Static app:Icons.Download}" Width="14" Height="14" /><TextBlock Text="Update from Git" /></StackPanel>
+                    </Button>
+                    <Button Classes.primary="{Binding !UpdateIsPrimary}" Command="{Binding CommitCommand}" IsEnabled="{Binding CanCommit}"
+                            ToolTip.Tip="Commit the ticked workspace changes to the branch">
+                      <StackPanel Orientation="Horizontal" Spacing="6"><app:Icon Data="{x:Static app:Icons.Upload}" Width="14" Height="14" /><TextBlock Text="Commit selected" /></StackPanel>
+                    </Button>
+                  </StackPanel>
+                </StackPanel>
+
+                <Border Classes="card" ClipToBounds="True">
+                  <DockPanel>
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="32,*,86,86" Background="{DynamicResource Bg0}" Height="30">
+                      <Button Classes="ghost" Padding="4" MinHeight="0" Command="{Binding SelectAllChangesCommand}" ToolTip.Tip="Tick / untick all committable changes">
+                        <app:Icon Data="{x:Static app:Icons.Check}" Width="12" Height="12" />
+                      </Button>
+                      <TextBlock Grid.Column="1" Classes="label" Text="ITEM" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="2" Classes="label" Text="WORKSPACE" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="3" Classes="label" Text="GIT" VerticalAlignment="Center" />
+                    </Grid>
+                    <Panel>
+                      <TextBlock Classes="muted" Margin="14" IsVisible="{Binding !Changes.Count}" Text="No differences." />
+                      <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Changes}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="app:ChangeRow">
+                              <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="0,5">
+                                <Grid ColumnDefinitions="32,*,86,86">
+                                  <CheckBox IsChecked="{Binding Selected}" IsEnabled="{Binding CanCommit}" Margin="8,0,0,0" MinWidth="0" />
+                                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Classes="faint" FontSize="11" Text="{Binding Type}" />
+                                  </StackPanel>
+                                  <TextBlock Grid.Column="2" FontSize="12" VerticalAlignment="Center" Text="{Binding Workspace}" Foreground="{Binding Workspace, Converter={x:Static app:Conv.ActionBrush}}" />
+                                  <Panel Grid.Column="3" VerticalAlignment="Center">
+                                    <TextBlock FontSize="12" Text="{Binding Remote}" Foreground="{Binding Remote, Converter={x:Static app:Conv.ActionBrush}}" IsVisible="{Binding !IsConflict}" />
+                                    <Border Classes="pill danger" HorizontalAlignment="Left" IsVisible="{Binding IsConflict}"><TextBlock Text="Conflict" /></Border>
+                                  </Panel>
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </ScrollViewer>
+                    </Panel>
+                  </DockPanel>
+                </Border>
+              </DockPanel>
+
+              <!-- ── Offload ─────────────────────────────── -->
+              <ScrollViewer Classes="page" IsVisible="{Binding DetailPage, Converter={x:Static app:Conv.Is}, ConverterParameter=1}">
+                <StackPanel Margin="20,14,20,20" Spacing="14">
+                  <TextBlock TextWrapping="Wrap" LineHeight="20" Text="{Binding OffloadSummary}" />
+
+                  <StackPanel Spacing="6">
+                    <TextBlock Classes="label" Text="SAVE TO" />
+                    <Border Classes="callout">
+                      <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                        <app:Icon Data="{x:Static app:Icons.Folder}" Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                          <TextBlock Classes="mono" TextWrapping="Wrap" Text="{Binding OffloadTarget}" IsVisible="{Binding OffloadFolder, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                          <TextBlock Classes="muted" Text="No folder chosen yet. Nothing is written until you pick one." IsVisible="{Binding OffloadFolder, Converter={x:Static StringConverters.IsNullOrEmpty}}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="2" x:Name="ChooseFolder" Content="Choose…" Margin="10,0,0,0" MinHeight="28" />
+                        <Button Grid.Column="3" x:Name="OpenFolder" Classes="ghost" Margin="4,0,0,0" ToolTip.Tip="Open the folder"
+                                IsEnabled="{Binding OffloadFolder, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                          <app:Icon Data="{x:Static app:Icons.External}" />
+                        </Button>
+                      </Grid>
+                    </Border>
+                    <TextBlock Classes="faint" FontSize="12" TextWrapping="Wrap"
+                               Text="Each item gets its own folder in the Fabric Git layout (Name.Type), with _offload.json listing what was saved and how. Repoint backups go under _backups in the same place." />
+                    <TextBlock Classes="muted" FontSize="12" Text="{Binding LastOffload}" />
+                  </StackPanel>
+
+                  <CheckBox IsChecked="{Binding OffloadAll}" Content="Include every item (a full local copy, not just what Git can't track)" />
+
+                  <StackPanel Spacing="6">
+                    <TextBlock Classes="label" Text="ITEMS" />
+                    <Border Classes="card" ClipToBounds="True" MaxHeight="300">
+                      <Panel>
+                        <TextBlock Classes="muted" Margin="12" Text="Nothing to offload." IsVisible="{Binding !OffloadItems.Count}" />
+                        <ScrollViewer>
+                          <ItemsControl ItemsSource="{Binding OffloadItems}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate x:DataType="core:FabricItem">
+                                <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="12,6">
+                                  <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Classes="faint" FontSize="11.5" Text="{Binding Type}" Margin="10,0,0,0" />
+                                  </Grid>
+                                </Border>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </ScrollViewer>
+                      </Panel>
+                    </Border>
+                  </StackPanel>
+
+                  <Button Classes="primary" HorizontalAlignment="Right" Command="{Binding RunOffloadCommand}"
+                          IsEnabled="{Binding OffloadFolder, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <app:Icon Data="{x:Static app:Icons.Download}" Width="14" Height="14" />
+                      <TextBlock Text="{Binding OffloadItems.Count, StringFormat='Offload {0} item(s)'}" />
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+              </ScrollViewer>
+
+              <!-- ── Repoint ─────────────────────────────── -->
+              <ScrollViewer Classes="page" IsVisible="{Binding DetailPage, Converter={x:Static app:Conv.Is}, ConverterParameter=2}">
+                <StackPanel Margin="20,14,20,20" Spacing="14">
+                  <Border Classes="callout">
+                    <Grid ColumnDefinitions="Auto,*">
+                      <app:Icon Data="{x:Static app:Icons.Shield}" Foreground="{DynamicResource BrandText}" VerticalAlignment="Top" Margin="0,1,10,0" />
+                      <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="12" LineHeight="18"
+                                 Text="Moves this workspace to another branch without losing anything. Daxis refuses if anything is uncommitted, backs up every item to your offload folder, then shows exactly what the branch would add, overwrite or delete before anything changes. It never deletes a lakehouse, warehouse, database or eventhouse (their data would go with them). Cancel at any point puts the original branch back. Needs workspace Admin." />
+                    </Grid>
+                  </Border>
+
+                  <StackPanel Spacing="6" IsVisible="{Binding !HasPreview}">
+                    <TextBlock Classes="label" Text="TARGET BRANCH" />
+                    <Grid ColumnDefinitions="*,Auto">
+                      <AutoCompleteBox Text="{Binding TargetBranch, Mode=TwoWay}" ItemsSource="{Binding KnownBranches}" FilterMode="Contains"
+                                       MinimumPrefixLength="0" Watermark="Existing branch, e.g. feature/new-model" />
+                      <Button Grid.Column="1" Margin="8,0,0,0" Content="Check" Command="{Binding CheckRepointCommand}" IsEnabled="{Binding !IsOperating}" />
+                    </Grid>
+                    <TextBlock Classes="faint" FontSize="12" TextWrapping="Wrap"
+                               Text="Suggestions are branches other workspaces in the same repo and folder use. The branch must already exist and contain the same folder." />
+                  </StackPanel>
+
+                  <ItemsControl ItemsSource="{Binding Checks}" IsVisible="{Binding !HasPreview}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="app:CheckRow">
+                        <Border Classes="enter" Padding="0,5">
+                          <Grid ColumnDefinitions="24,*">
+                            <app:Icon Data="{x:Static app:Icons.Check}" Width="14" Height="14" Foreground="{DynamicResource BrandText}" IsVisible="{Binding Ok}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <app:Icon Data="{x:Static app:Icons.Close}" Width="14" Height="14" Foreground="{DynamicResource Danger}" IsVisible="{Binding !Ok}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <StackPanel Grid.Column="1">
+                              <TextBlock Text="{Binding Title}" />
+                              <TextBlock Classes="muted" FontSize="12" Text="{Binding Detail}" TextWrapping="Wrap" />
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <Button Classes="primary" HorizontalAlignment="Right" Content="Back up and preview…" Command="{Binding PrepareRepointCommand}"
+                          IsVisible="{Binding !HasPreview}" IsEnabled="{Binding ChecksPassed}" />
+
+                  <!-- Preview: nothing has changed yet -->
+                  <StackPanel Spacing="12" IsVisible="{Binding HasPreview}">
+                    <StackPanel Spacing="2">
+                      <TextBlock Classes="label" Text="PREVIEW · NOTHING HAS CHANGED YET" />
+                      <TextBlock Classes="h2" FontFamily="{StaticResource MonoFont}" Text="{Binding PreviewTitle}" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Text="{Binding PreviewSummary}" />
+
+                    <ItemsControl ItemsSource="{Binding PlanBlocks}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                          <Border Classes="callout danger" Margin="0,0,0,6">
+                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" />
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding PlanWarnings}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                          <Border Classes="callout warn" Margin="0,0,0,6">
+                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" />
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Classes="card" ClipToBounds="True" MaxHeight="320" IsVisible="{Binding Plan.Count}">
+                      <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Plan}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="app:PlanRow">
+                              <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="12,6">
+                                <Grid ColumnDefinitions="*,96">
+                                  <StackPanel>
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Classes="faint" FontSize="11" Text="{Binding Type}" />
+                                  </StackPanel>
+                                  <TextBlock Grid.Column="1" FontSize="12" VerticalAlignment="Center" Text="{Binding Action}"
+                                             Foreground="{Binding Action, Converter={x:Static app:Conv.ActionBrush}}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </ScrollViewer>
+                    </Border>
+
+                    <CheckBox IsChecked="{Binding Acknowledged}" IsVisible="{Binding PlanWarnings.Count}"
+                              Content="I understand the warnings above and have what I need from the backup" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                      <Button Content="Cancel and restore branch…" Command="{Binding CancelRepointCommand}" IsEnabled="{Binding !IsOperating}" />
+                      <Button Classes="primary" Content="Switch…" Command="{Binding ApplyRepointCommand}" IsEnabled="{Binding CanSwitch}" />
+                    </StackPanel>
+                  </StackPanel>
+                </StackPanel>
+              </ScrollViewer>
+            </Panel>
+          </DockPanel>
+
+          <!-- ── Operation in progress / result ───────────────────────── -->
+          <Border Background="{DynamicResource Scrim}" IsVisible="{Binding ShowOperation}">
+            <Border Classes="card enter" Background="{DynamicResource Bg1}" Margin="20" Padding="20,18" VerticalAlignment="Center" BoxShadow="0 16 48 0 #40000000">
+              <StackPanel Spacing="10">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <Ellipse Classes="pulse" Width="8" Height="8" Fill="{DynamicResource Brand}" VerticalAlignment="Center" IsVisible="{Binding IsOperating}" />
+                  <TextBlock Classes="h2" Text="{Binding OperationTitle}" TextWrapping="Wrap" />
+                </StackPanel>
+                <ScrollViewer MaxHeight="380">
+                  <ItemsControl ItemsSource="{Binding Steps}" ItemTemplate="{StaticResource StepTemplate}" />
+                </ScrollViewer>
+                <Border Classes="callout enter" Classes.danger="{Binding OperationFailed}" IsVisible="{Binding OperationResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <SelectableTextBlock Text="{Binding OperationResult}" TextWrapping="Wrap" FontSize="12.5" LineHeight="19" />
+                </Border>
+                <Button HorizontalAlignment="Right" Content="Close" Command="{Binding CloseOperationCommand}" IsVisible="{Binding !IsOperating}" />
+              </StackPanel>
+            </Border>
+          </Border>
+        </Panel>
+      </Grid>
+    </DockPanel>
+  </Panel>
+</UserControl>

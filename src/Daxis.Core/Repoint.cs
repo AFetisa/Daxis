@@ -11,11 +11,15 @@ public sealed record RepointPreview(RepointJournal Journal, List<PlannedChange> 
     /// <summary>The target folder is empty: switching commits the workspace into the new branch and changes no items.</summary>
     public bool CommitsIntoEmptyBranch => Journal.RequiredAction == "CommitToGit";
     public List<string> Blocks => [.. Changes.Where(c => c.Block is not null).Select(c => c.Block!),
-        .. Changes.Where(c => c.Impact != Impact.Create && !BackedUp(c)).Select(c => $"{c.Name} ({c.Type}) has no local backup, so it can't be changed safely.")];
+        .. Changes.Where(c => c.Impact != Impact.Create && !BackedUp(c)).Select(c => $"{c.Name} ({c.Type}) has no full local backup, so it can't be changed safely.")];
+
+    /// <summary>Identity of the confirmed plan, to detect that the workspace or branch moved on before it was applied.</summary>
+    internal static string Signature(IEnumerable<PlannedChange> changes) =>
+        string.Join("\n", changes.Select(c => $"{c.Type}|{c.Name}|{c.Impact}".ToLowerInvariant()).Order());
     public List<string> Warnings => [.. Changes.Where(c => c.Warning is not null).Select(c => c.Warning!)];
     public bool Blocked => Blocks.Count > 0;
 
-    bool BackedUp(PlannedChange c) => Backup.Items.Any(i => i.Ok &&
+    bool BackedUp(PlannedChange c) => Backup.Items.Any(i => i.IsFullCopy &&
         string.Equals(i.Name, c.Name, StringComparison.OrdinalIgnoreCase) && string.Equals(i.Type, c.Type, StringComparison.OrdinalIgnoreCase));
 }
 
@@ -64,6 +68,19 @@ public sealed class Repointer(FabricClient fabric, string? journalDir = null)
             catch (FabricException e) { return (new List<WorkspaceRelation>(), $"Couldn't read ({e.Message}); none will be restored"); }
         });
         j.Save(journalDir);
+
+        // Last look before the first write: the checks the user saw may be minutes old.
+        await Step(progress, "recheck", "Re-check the workspace just before switching", async () =>
+        {
+            var live = await fabric.GitConnectionAsync(ws.Id, ct);
+            if (live.Provider is not { } lp || lp.FamilyKey != original.FamilyKey || lp.Branch != original.Branch)
+                throw new InvalidOperationException($"The workspace's Git connection changed since the check (now {live.Provider?.Branch ?? "not connected"}). Nothing was changed.");
+            var s = await fabric.GitStatusAsync(ws.Id, ct);
+            if (s.Uncommitted > 0 || s.Conflicts > 0)
+                throw new InvalidOperationException($"{s.Uncommitted} uncommitted change(s) and {s.Conflicts} conflict(s) appeared since the check. Commit them first; nothing was changed.");
+            j.OriginalHead = live.Head ?? j.OriginalHead;
+            return (true, "Still on " + original.Branch + ", nothing uncommitted");
+        });
 
         // 2. Point at the target. From here on, any failure puts the original branch back.
         try
@@ -117,6 +134,17 @@ public sealed class Repointer(FabricClient fabric, string? journalDir = null)
     {
         if (preview.Blocked) throw new InvalidOperationException("The preview has blocking issues; nothing was changed.");
         var j = preview.Journal;
+        // The workspace stayed live while the user read the preview: apply only what they saw.
+        await Step(progress, "recheck", "Confirm nothing changed since the preview", async () =>
+        {
+            var fresh = await fabric.GitStatusAsync(j.WorkspaceId, ct);
+            var now = new RepointPreview(j, j.RequiredAction == "CommitToGit" ? [] : Git.ClassifySwitch(fresh), preview.Backup);
+            if (now.Blocked || RepointPreview.Signature(now.Changes) != RepointPreview.Signature(preview.Changes))
+                throw new InvalidOperationException("The workspace or the branch changed after the preview. Nothing was applied; " +
+                    "cancel to restore the original branch, then prepare the switch again.");
+            j.RemoteCommitHash = fresh.RemoteCommitHash ?? j.RemoteCommitHash;
+            return (true, "Same as the preview");
+        });
         if (j.RequiredAction == "CommitToGit")
         {
             await Step(progress, "update", $"Commit the workspace into {j.Target}", async () =>
@@ -184,12 +212,26 @@ public sealed class Repointer(FabricClient fabric, string? journalDir = null)
                 return (r, $"Fabric says next: {r.RequiredAction}");
             });
             if (contentChanged && init.RemoteCommitHash is { } hash)
+            {
+                // The same rule as going forward: never delete a data-bearing item, even to restore.
+                var blocks = await Step(progress, "r-check", $"Check what restoring {j.Original.Branch} would change", async () =>
+                {
+                    var b = Git.ClassifySwitch(await fabric.GitStatusAsync(j.WorkspaceId, ct)).Where(c => c.Block is not null).ToList();
+                    return (b, b.Count == 0 ? "Safe to restore" : $"{b.Count} item(s) would lose data");
+                });
+                if (blocks.Count > 0)
+                {
+                    j.Advance(RepointStep.RollingBack, "reconnected; content restore blocked", journalDir);
+                    throw new InvalidOperationException($"Reconnected to {j.Original.Branch}, but restoring its content would delete: " +
+                        string.Join(" ", blocks.Select(b => b.Block)) + $" Move that data first, then run Update from Git. The backup is at {j.BackupPath}.");
+                }
                 await Step(progress, "r-update", $"Restore content from {j.Original.Branch}", async () =>
                 {
                     var pr = new Progress<int>(pc => progress.Report(new("r-update", $"Restore content from {j.Original.Branch}", StepState.Active, $"{pc}%", pc)));
                     await fabric.GitUpdateAsync(j.WorkspaceId, hash, init.WorkspaceHead, "PreferRemote", pr, ct);
                     return (true, "Workspace matches the original branch again");
                 });
+            }
         }
         await RelinkAsync(j, progress, ct);
         j.Advance(RepointStep.RolledBack, $"on {j.Original.Branch}", journalDir);
