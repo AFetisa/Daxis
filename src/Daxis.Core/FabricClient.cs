@@ -22,13 +22,15 @@ public sealed record ReportRef(string Id, string Name, string WorkspaceId, strin
 public sealed record WorkspaceReport(ReportRef Ref, string ModelId, string ModelWorkspaceId);
 public sealed record QueryResult(IReadOnlyList<string> Columns, IReadOnlyList<string?[]> Rows);
 
-public sealed class FabricException(HttpStatusCode status, string message) : Exception(message)
+public sealed class FabricException(HttpStatusCode status, string message, string? code = null) : Exception(message)
 {
     public HttpStatusCode Status { get; } = status;
+    /// <summary>The service's <c>errorCode</c> (e.g. WorkspaceNotConnectedToGit), when it sent one.</summary>
+    public string? Code { get; } = code;
 }
 
 /// <summary>Thin client over the Fabric, Power BI and OneLake REST APIs.</summary>
-public sealed class FabricClient(Auth auth) : IDisposable
+public sealed partial class FabricClient(Auth auth) : IDisposable
 {
     const string Fabric = "https://api.fabric.microsoft.com/v1/";
     const string PowerBi = "https://api.powerbi.com/v1.0/myorg/";
@@ -65,6 +67,35 @@ public sealed class FabricClient(Auth auth) : IDisposable
         return json!["definition"]!["parts"]!.AsArray().Select(p => new DefinitionPart(
                 Str(p!, "path"), Encoding.UTF8.GetString(Convert.FromBase64String(Str(p!, "payload"))), Str(p!, "payloadType")))
             .ToList();
+    }
+
+    /// <summary>The definition as raw bytes per part, for writing to disk (text decoding would corrupt images and custom visuals).</summary>
+    public async Task<List<ItemFile>> GetDefinitionFilesAsync(FabricItem item, string? format = null, CancellationToken ct = default)
+    {
+        var url = $"{Fabric}workspaces/{E(item.WorkspaceId)}/items/{E(item.Id)}/getDefinition" + (format is null ? "" : $"?format={E(format)}");
+        var json = await LongRunningAsync(HttpMethod.Post, url, null, wantResult: true, ct);
+        return json!["definition"]!["parts"]!.AsArray()
+            .Select(p => new ItemFile(Str(p!, "path"), Convert.FromBase64String(Str(p!, "payload")))).ToList();
+    }
+
+    /// <summary>Downloads a report as a .pbix (the fallback for reports without an item definition).</summary>
+    public async Task<byte[]> ExportReportAsync(FabricItem report, CancellationToken ct = default)
+    {
+        using var res = await SendAsync(HttpMethod.Get, $"{PowerBi}groups/{E(report.WorkspaceId)}/reports/{E(report.Id)}/Export", null, Auth.PowerBi, ct);
+        return await res.Content.ReadAsByteArrayAsync(ct);
+    }
+
+    /// <summary>Whatever the service can say about an item that has no definition: dashboard tiles, dataflow JSON, else the item record.</summary>
+    public async Task<JsonElement?> ItemMetadataAsync(FabricItem item, CancellationToken ct = default)
+    {
+        var url = item.Type switch
+        {
+            "Dashboard" => $"{PowerBi}groups/{E(item.WorkspaceId)}/dashboards/{E(item.Id)}/tiles",
+            "Dataflow" => $"{PowerBi}groups/{E(item.WorkspaceId)}/dataflows/{E(item.Id)}",
+            _ => $"{Fabric}workspaces/{E(item.WorkspaceId)}/items/{E(item.Id)}",
+        };
+        try { return JsonSerializer.Deserialize<JsonElement>((await GetJsonAsync(url, Auth.PowerBi, ct)).ToJsonString()); }
+        catch (FabricException) { return null; }
     }
 
     public Task UpdateDefinitionAsync(FabricItem item, IEnumerable<DefinitionPart> parts, CancellationToken ct = default)
@@ -218,7 +249,8 @@ public sealed class FabricClient(Auth auth) : IDisposable
         return all;
     }
 
-    async Task<JsonNode?> LongRunningAsync(HttpMethod method, string url, object? body, bool wantResult, CancellationToken ct)
+    async Task<JsonNode?> LongRunningAsync(HttpMethod method, string url, object? body, bool wantResult, CancellationToken ct,
+        IProgress<int>? progress = null)
     {
         using var res = await SendAsync(method, url, body, Auth.PowerBi, ct);
         if (res.StatusCode != HttpStatusCode.Accepted)
@@ -230,10 +262,12 @@ public sealed class FabricClient(Auth auth) : IDisposable
         {
             await Task.Delay(delay, ct);
             var state = await GetJsonAsync(op, Auth.PowerBi, ct);
+            if (state["percentComplete"]?.GetValueKind() == JsonValueKind.Number) progress?.Report(state["percentComplete"]!.GetValue<int>());
             switch (Str(state, "status"))
             {
                 case "Succeeded": return wantResult ? await GetJsonAsync(op + "/result", Auth.PowerBi, ct) : null;
-                case "Failed": throw new FabricException(HttpStatusCode.OK, state["error"]?["message"]?.ToString() ?? "Operation failed.");
+                case "Failed": throw new FabricException(HttpStatusCode.OK, state["error"]?["message"]?.ToString() ?? "Operation failed.",
+                    state["error"]?["errorCode"]?.ToString());
             }
             delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 1.5, 5));
         }
@@ -267,7 +301,7 @@ public sealed class FabricClient(Auth auth) : IDisposable
             }
             var text = await res.Content.ReadAsStringAsync(ct);
             res.Dispose();
-            throw new FabricException(res.StatusCode, ErrorMessage(res.StatusCode, text));
+            throw new FabricException(res.StatusCode, ErrorMessage(res.StatusCode, text), ErrorCode(text));
         }
     }
 
@@ -302,6 +336,12 @@ public sealed class FabricClient(Auth auth) : IDisposable
         }
         catch (Exception e) when (e is JsonException or InvalidOperationException) { } // non-JSON or unexpected shape
         return $"{(int)status} {status}";
+    }
+
+    internal static string? ErrorCode(string body)
+    {
+        try { return JsonNode.Parse(body)?["errorCode"]?.GetValue<string>(); }
+        catch (Exception e) when (e is JsonException or InvalidOperationException) { return null; }
     }
 
     static string Str(JsonNode n, string prop) => n[prop]?.GetValue<string>() ?? "";
