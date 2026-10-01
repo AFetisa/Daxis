@@ -106,7 +106,7 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
 
     [ObservableProperty] private object? _selectedNode;
     [ObservableProperty] private string _filter = "";
-    [ObservableProperty] private int _page; // 0 overview, 1 editor, 2 diagram, 3 lineage, 4 report usage, 5 memory
+    [ObservableProperty] private int _page; // 0 overview, 1 editor, 2 diagram, 3 lineage, 4 report usage, 5 memory, 6 quality
 
     // ── Selected object ──────────────────────────────────────────────────────
     [ObservableProperty] private string _name = "";
@@ -236,6 +236,81 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
     }
 
     [RelayCommand] private void ClearMemoryTable() => MemoryTable = "";
+
+    // ── Quality page ─────────────────────────────────────────────────────────
+    public ObservableCollection<Finding> QualityFindings { get; } = [];
+    [ObservableProperty] private QualityReport? _quality;
+    [ObservableProperty] private string _qualityInfo = "";
+    [ObservableProperty] private bool _isScoring;
+    [ObservableProperty] private int _qualitySeverity; // 0 all, 1 errors, 2 warnings, 3 info, 4 suppressed
+    [ObservableProperty] private int _qualityArea;     // 0 all, then QualityArea + 1
+    [ObservableProperty] private string _qualitySearch = "";
+    public event Action<string>? ExportRequested;
+    Task _storageLoad = Task.CompletedTask;
+
+    partial void OnQualityChanged(QualityReport? value) => ApplyQualityFilter();
+    partial void OnQualitySeverityChanged(int value) => ApplyQualityFilter();
+    partial void OnQualityAreaChanged(int value) => ApplyQualityFilter();
+    partial void OnQualitySearchChanged(string value) => ApplyQualityFilter();
+
+    void ApplyQualityFilter()
+    {
+        QualityFindings.Clear();
+        if (Quality is null) return;
+        var q = QualitySearch.Trim();
+        foreach (var f in Quality.Findings
+                     .Where(f => QualitySeverity == 4 ? f.Suppressed : !f.Suppressed && (QualitySeverity == 0 || (int)f.Severity == 3 - QualitySeverity))
+                     .Where(f => QualityArea == 0 || (int)f.Area == QualityArea - 1)
+                     .Where(f => q.Length == 0 || f.Object.Contains(q, StringComparison.OrdinalIgnoreCase) || f.Table.Contains(q, StringComparison.OrdinalIgnoreCase)
+                                 || f.Rule.Contains(q, StringComparison.OrdinalIgnoreCase) || f.RuleId.Contains(q, StringComparison.OrdinalIgnoreCase))
+                     .Take(1000)) // ponytail: the grid stays responsive; search and filters reach the rest
+            QualityFindings.Add(f);
+    }
+
+    /// <summary>Scores the model as it is now, including unsaved local edits.</summary>
+    [RelayCommand]
+    private async Task ScoreQuality()
+    {
+        if (IsScoring || _session is not { } session) return;
+        IsScoring = true;
+        QualityInfo = "Reading storage statistics and checking rules…";
+        try
+        {
+            Commit();
+            await _storageLoad; // one XMLA query at a time on a connection
+            StorageStats stats;
+            try { stats = await Task.Run(session.Stats); }
+            catch { stats = StorageStats.Empty; }
+            var storage = Storage;
+            var report = await Task.Run(() => ModelQuality.Score(session.Model, storage, stats));
+            if (session != _session) return; // reconnected meanwhile
+            Quality = report;
+            QualityFiles.Reports[Item.Id] = report;
+            QualityInfo = (stats.Rows.Count == 0 ? "Storage statistics unavailable, so size and cardinality rules were skipped. " : "") +
+                $"{report.Rules.Count} rules applied at {DateTime.Now:HH:mm}" + (IsDirty ? " · includes unsaved changes" : "");
+        }
+        catch (Exception e) { QualityInfo = "Couldn't score the model: " + (e.InnerException?.Message ?? e.Message); }
+        finally { IsScoring = false; }
+    }
+
+    [RelayCommand] private void ExportQuality(string format) => ExportRequested?.Invoke(format);
+
+    public IReadOnlyList<ScoredModel> QualityExportModels() =>
+        Quality is null ? [] : [new ScoredModel(Workspace.DisplayName, Item.DisplayName, Quality)];
+
+    /// <summary>Quality → editor: select the object a finding names (relationships open the diagram).</summary>
+    public void OpenFinding(Finding f)
+    {
+        if (f.Area == Daxis.Core.QualityArea.Relationships) { Page = 2; return; }
+        if (f.Table.Length == 0) return;
+        Filter = "";
+        var group = Groups.FirstOrDefault(g => g.Table?.Name == f.Table);
+        var node = group?.Children.FirstOrDefault(c => c.Name == f.Object) ?? group?.Children.FirstOrDefault(c => c.IsSource) ?? group?.Children.FirstOrDefault();
+        if (group is null || node is null) return;
+        group.IsExpanded = true;
+        SelectedNode = node;
+        Page = 1;
+    }
     readonly Dictionary<string, ReportStats?> _stats = [];
     readonly Dictionary<string, string> _statErrors = [];
     Task _reportsLoad = Task.CompletedTask;
@@ -281,7 +356,7 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
         }));
         Attach(session);
         _reportsLoad = LoadReportsAsync();
-        _ = LoadStorageAsync(session);
+        _storageLoad = LoadStorageAsync(session);
         _ = LoadRefreshAsync();
     });
 
@@ -329,6 +404,8 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
         _stats.Clear();
         _statErrors.Clear();
         _analysed = false;
+        Quality = null;
+        QualityInfo = "";
         Storage = null;
         StorageInfo = "Reading storage statistics…";
         RefreshInsights();
@@ -601,6 +678,8 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
         Rebuild(keep);
         Show(_current);
         Notice = ObjectError is null ? "Saved to service" : "Saved, but the service reports an error on this object";
+        Quality = null;
+        if (Page == 6) _ = ScoreQuality();
     });
 
     [RelayCommand]
@@ -713,6 +792,7 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
     partial void OnPageChanged(int value)
     {
         if (value is 3 or 4 && !_analysed) _ = AnalyseReports();
+        if (value == 6 && Quality is null) _ = ScoreQuality();
     }
 
     /// <summary>Reads each connected report's definition once and folds it into usage and lineage as it arrives.</summary>

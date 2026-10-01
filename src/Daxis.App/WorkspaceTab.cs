@@ -12,8 +12,10 @@ public sealed record TypeCount(string Name, int Count)
     public string Label => Name.ToUpperInvariant();
 }
 
-public sealed record ModelRow(FabricItem Item, string Sources, int Reports, RefreshHealth? Refresh = null)
+public sealed record ModelRow(FabricItem Item, string Sources, int Reports, RefreshHealth? Refresh = null, QualityReport? Quality = null)
 {
+    public string Grade => Quality?.Grade ?? "";
+    public string QualityText => Quality is null ? "" : $"{Quality.Score:0}";
     public string Name => Item.DisplayName;
     public string ReportsText => Reports == 0 ? "No reports" : Reports.ToString();
     public string LastRefresh => Refresh?.LastText ?? "…";
@@ -214,7 +216,7 @@ public sealed partial class WorkspaceTab(FabricItem item, Workspace ws, Auth aut
                 Models.Add(new ModelRow(m,
                     sources.TryGetValue(m.Id, out var s) ? string.Join(", ", s.Select(x => x.Connector).Distinct()) : "…",
                     reports.Count(r => string.Equals(r.ModelId, m.Id, StringComparison.OrdinalIgnoreCase)),
-                    refresh.GetValueOrDefault(m.Id)));
+                    refresh.GetValueOrDefault(m.Id), QualityFiles.Reports.GetValueOrDefault(m.Id)));
             OrphanModels = Models.Count(m => m.Reports == 0);
             Lineage = ModelGraph.Workspace(models, sources, reports, (w, m) => $"https://app.fabric.microsoft.com/groups/{w}/datasets/{m}");
         }
@@ -239,6 +241,48 @@ public sealed partial class WorkspaceTab(FabricItem item, Workspace ws, Auth aut
         SourcesInfo = failed > 0 ? $"{failed} model(s) didn't report their data sources" : "";
         BuildRefreshes();
     });
+
+    // ── Quality ──────────────────────────────────────────────────────────────
+
+    [ObservableProperty] private string _qualityInfo = "";
+
+    /// <summary>Scores every model here over XMLA, reusing the connections the Memory and Consumption pages open.</summary>
+    [RelayCommand]
+    private async Task ScoreModels()
+    {
+        if (IsAnalysing) return;
+        IsAnalysing = true;
+        try
+        {
+            await ConnectModelsAsync(text => QualityInfo = text);
+            var ready = _models.Where(m => _sessions.ContainsKey(m.Id)).ToList();
+            var done = 0;
+            foreach (var m in ready) // ponytail: one model at a time; scoring is quick once connected
+            {
+                QualityInfo = $"Checking rules… {++done} of {ready.Count}";
+                var session = _sessions[m.Id];
+                var storage = _storage.GetValueOrDefault(m.Id);
+                try
+                {
+                    QualityFiles.Reports[m.Id] = await Task.Run(() =>
+                    {
+                        StorageStats stats;
+                        try { stats = session.Stats(); }
+                        catch { stats = StorageStats.Empty; }
+                        return ModelQuality.Score(session.Model, storage, stats);
+                    });
+                }
+                catch (Exception e) { _modelErrors[m.Id] = e.Message; }
+            }
+            for (var i = 0; i < Models.Count; i++)
+                Models[i] = Models[i] with { Quality = QualityFiles.Reports.GetValueOrDefault(Models[i].Item.Id) };
+            var r = ModelQuality.Rollup(Models.Select(x => x.Quality).OfType<QualityReport>().ToList());
+            QualityInfo = r.Models == 0 ? "No model could be read over XMLA." :
+                $"Workspace {r.Grade} ({r.Score:0}, mean of {r.Models} model(s)) · {r.Errors} errors · {r.Warnings} warnings" +
+                (_modelErrors.Count > 0 ? $" · {_modelErrors.Count} not reachable over XMLA" : "") + ". Open a model's Quality page for detail.";
+        }
+        finally { IsAnalysing = false; }
+    }
 
     // ── Refreshes ────────────────────────────────────────────────────────────
 

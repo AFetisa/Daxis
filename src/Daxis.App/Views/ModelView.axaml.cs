@@ -43,6 +43,11 @@ public sealed partial class ModelView : UserControl
             {
                 if (ReportsGrid.SelectedItem is ReportRow r) Launch(r.Ref.WebUrl);
             };
+            QualityGrid.DoubleTapped += (_, _) =>
+            {
+                if (QualityGrid.SelectedItem is Finding f) vm.OpenFinding(f);
+            };
+            vm.ExportRequested += format => _ = QualityFiles.SaveAsync(this, format, vm.QualityExportModels(), vm.Title);
 
             // Graph cards open their object; the page's canvas replays its entrance each time it's shown.
             void Open(GNode n)

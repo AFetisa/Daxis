@@ -31,6 +31,19 @@ public static class Conv
         return app.TryGetResource(key, app.ActualThemeVariant, out var b) ? b as Avalonia.Media.IBrush : null;
     });
 
+    /// <summary>Quality grade → colour: A/B brand, C warning, D/F danger, unscored faint.</summary>
+    public static readonly IValueConverter GradeBrush = new FuncValueConverter<string, Avalonia.Media.IBrush?>(g =>
+        Resource(g switch { "A" or "B" => "BrandText", "C" => "Warning", "D" or "F" => "Danger", _ => "FgFaint" }));
+
+    public static readonly IValueConverter SeverityBrush = new FuncValueConverter<Daxis.Core.Severity, Avalonia.Media.IBrush?>(s =>
+        Resource(s switch { Daxis.Core.Severity.Error => "Danger", Daxis.Core.Severity.Warning => "Warning", _ => "FgMuted" }));
+
+    static Avalonia.Media.IBrush? Resource(string key)
+    {
+        var app = Avalonia.Application.Current!;
+        return app.TryGetResource(key, app.ActualThemeVariant, out var b) ? b as Avalonia.Media.IBrush : null;
+    }
+
     public static readonly IValueConverter FreshText = new FuncValueConverter<Daxis.Core.Freshness, string>(f => f switch
     {
         Daxis.Core.Freshness.Fresh => "Fresh",

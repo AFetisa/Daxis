@@ -69,15 +69,29 @@
 
             <!-- Semantic models -->
             <StackPanel Spacing="8">
-              <Grid ColumnDefinitions="Auto,*">
+              <Grid ColumnDefinitions="Auto,*,Auto">
                 <TextBlock Classes="label" Text="SEMANTIC MODELS" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="{Binding OrphanModels, StringFormat='{}{0} without a report in this workspace. Double-click a model to open it.'}" />
+                <Button Grid.Column="2" Content="Check quality" Command="{Binding ScoreModelsCommand}" IsEnabled="{Binding !IsAnalysing}" MinHeight="26"
+                        ToolTip.Tip="Score every model here against best-practice rules (reads metadata over XMLA)" />
               </Grid>
+              <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap" Text="{Binding QualityInfo}"
+                         IsVisible="{Binding QualityInfo, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
               <Border Classes="card" ClipToBounds="True">
                 <DataGrid x:Name="ModelsGrid" ItemsSource="{Binding Models}" x:CompileBindings="False" MaxHeight="360">
                   <DataGrid.Columns>
                     <DataGridTextColumn Header="Model" Binding="{Binding Name}" Width="1.3*" />
+                    <DataGridTemplateColumn Header="Quality" Width="96" SortMemberPath="Quality.Score">
+                      <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="app:ModelRow">
+                          <StackPanel Orientation="Horizontal" Spacing="6" Margin="10,0" VerticalAlignment="Center">
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Grade}" Foreground="{Binding Grade, Converter={x:Static app:Conv.GradeBrush}}" />
+                            <TextBlock Classes="muted" Text="{Binding QualityText}" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Data sources" Binding="{Binding Sources}" Width="1.2*" />
                     <DataGridTextColumn Header="Reports" Binding="{Binding ReportsText}" Width="110" />
                     <DataGridTextColumn Header="Last refresh" Binding="{Binding LastRefresh}" Width="1.4*" />

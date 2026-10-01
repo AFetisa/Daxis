@@ -63,6 +63,7 @@ public static class Icons
     public static readonly Geometry Download = P("M12,4 V15 M7,10 L12,15 L17,10 M5,19 H19");
     public static readonly Geometry Upload = P("M12,15 V4 M7,9 L12,4 L17,9 M5,19 H19");
     public static readonly Geometry Shield = P("M12,3 L19,6 V11 C19,15.5 16,19 12,21 C8,19 5,15.5 5,11 V6 Z M9,12 L11,14 L15,10");
+    public static readonly Geometry Gauge = P("M4,17 A8,8 0 1 1 20,17 M12,17 L16,10 M4,17 H6 M18,17 H20");
     public static readonly Geometry Warn = P("M12,4 L21,19 H3 Z M12,10 V14 M12,16.5 V17");
     public static readonly Geometry SignOut = P("M10,5 H5 V19 H10 M15,8 L19,12 L15,16 M19,12 H9");
 }

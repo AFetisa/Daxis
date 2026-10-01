@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="using:Daxis.App"
+             x:Class="Daxis.App.Views.EstateQualityView"
+             x:DataType="app:EstateQualityTab">
+  <DockPanel>
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Background="{DynamicResource Bg0}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="24,16,16,14">
+      <StackPanel Spacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="8" Height="20">
+              <Border Classes="pill brand"><TextBlock Text="Estate quality" /></Border>
+              <TextBlock Classes="muted" VerticalAlignment="Center" Text="{Binding ScanText}" />
+            </StackPanel>
+            <TextBlock Classes="h1" FontSize="20" Text="Semantic model quality across workspaces" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsScanning}" />
+            <Button ToolTip.Tip="Save the models in view">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <app:Icon Data="{x:Static app:Icons.Download}" Width="14" Height="14" />
+                <TextBlock Text="Export" />
+              </StackPanel>
+              <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                  <MenuItem Header="HTML report" Command="{Binding ExportCommand}" CommandParameter="html" />
+                  <MenuItem Header="Markdown report" Command="{Binding ExportCommand}" CommandParameter="md" />
+                  <MenuItem Header="Scores (CSV)" Command="{Binding ExportCommand}" CommandParameter="scores" />
+                  <MenuItem Header="Findings (CSV)" Command="{Binding ExportCommand}" CommandParameter="findings" />
+                  <MenuItem Header="JSON" Command="{Binding ExportCommand}" CommandParameter="json" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+            <Button Classes="primary" Content="Scan selected" Command="{Binding ScanCommand}" IsEnabled="{Binding !IsScanning}" MinHeight="28"
+                    ToolTip.Tip="Connect to every model in the ticked workspaces over XMLA, score it, then disconnect" />
+          </StackPanel>
+        </Grid>
+        <ProgressBar Height="2" MinHeight="2" Minimum="0" Maximum="100" Value="{Binding ScanPercent}" IsVisible="{Binding IsScanning}" />
+
+        <UniformGrid Columns="5">
+          <UniformGrid.Styles>
+            <Style Selector="UniformGrid > Border.card">
+              <Setter Property="Margin" Value="0,0,10,0" />
+              <Setter Property="Padding" Value="12,9" />
+            </Style>
+            <Style Selector="TextBlock.stat">
+              <Setter Property="FontSize" Value="20" />
+              <Setter Property="FontWeight" Value="Medium" />
+              <Setter Property="Margin" Value="0,2,0,0" />
+            </Style>
+          </UniformGrid.Styles>
+          <Border Classes="card" ToolTip.Tip="Plain mean of model scores, so every model counts the same">
+            <StackPanel>
+              <TextBlock Classes="label" Text="ESTATE GRADE" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Classes="stat" FontWeight="SemiBold" Text="{Binding Estate.Grade, FallbackValue='–'}"
+                           Foreground="{Binding Estate.Grade, Converter={x:Static app:Conv.GradeBrush}, FallbackValue={x:Null}}" />
+                <TextBlock Classes="muted" VerticalAlignment="Bottom" Margin="0,0,0,3" Text="{Binding Estate.Score, StringFormat='{}{0:0} mean', FallbackValue=''}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="MODELS SCORED" /><TextBlock Classes="stat" Text="{Binding Estate.Models, FallbackValue=0}" /></StackPanel></Border>
+          <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="GRADE SPREAD" /><TextBlock Classes="stat" FontSize="15" Margin="0,6,0,0" Text="{Binding GradeSpread}" /></StackPanel></Border>
+          <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="ERRORS" /><TextBlock Classes="stat" Foreground="{DynamicResource Danger}" Text="{Binding Estate.Errors, FallbackValue=0}" /></StackPanel></Border>
+          <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="WARNINGS" /><TextBlock Classes="stat" Foreground="{DynamicResource Warning}" Text="{Binding Estate.Warnings, FallbackValue=0}" /></StackPanel></Border>
+        </UniformGrid>
+      </StackPanel>
+    </Border>
+
+    <Grid ColumnDefinitions="340,1,*">
+      <!-- Workspaces: tick to include, click to drill in -->
+      <DockPanel>
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="14,12,10,6">
+          <TextBlock Classes="label" Text="WORKSPACES" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Classes="ghost" Content="All" Command="{Binding CheckAllCommand}" FontSize="13" ToolTip.Tip="Tick every workspace on capacity" />
+          <Button Grid.Column="2" Classes="ghost" Content="None" Command="{Binding CheckNoneCommand}" FontSize="13" />
+        </Grid>
+        <ListBox ItemsSource="{Binding Workspaces}" SelectedItem="{Binding Selected}" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="app:EstateWorkspace">
+              <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+                <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding Scorable}" VerticalAlignment="Center" MinWidth="0" Margin="0,0,6,0" />
+                <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Classes.muted="{Binding !Scorable}" />
+                <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="{Binding Grade}" VerticalAlignment="Center" Margin="8,0,0,0"
+                           Foreground="{Binding Grade, Converter={x:Static app:Conv.GradeBrush}}" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="faint" FontSize="12" Text="{Binding Status}" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" ToolTip.Tip="{Binding Status}" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <Border Grid.Column="1" Background="{DynamicResource Border}" />
+
+      <!-- Models -->
+      <DockPanel Grid.Column="2">
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,Auto,*,Auto" Margin="16,10,16,8">
+          <TextBlock Classes="label" Text="{Binding ScopeText}" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Classes="ghost" Margin="8,0,0,0" FontSize="13" Content="Show all workspaces" Command="{Binding ShowAllCommand}"
+                  IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          <TextBox Grid.Column="3" Width="240" Text="{Binding Search}" Watermark="Filter models" />
+        </Grid>
+        <TextBlock DockPanel.Dock="Bottom" Classes="faint" FontSize="13" Margin="16,6,16,10" TextWrapping="Wrap"
+                   Text="Lowest scores first. Double-click a model to open its Quality page. Workspaces without capacity have no XMLA endpoint and can't be scored." />
+        <DataGrid x:Name="ModelsGrid" ItemsSource="{Binding Models}" x:CompileBindings="False" Margin="12,0">
+          <DataGrid.Columns>
+            <DataGridTemplateColumn Header="Grade" Width="76" SortMemberPath="Score">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="app:EstateModel">
+                  <TextBlock Margin="10,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Grade}"
+                             Foreground="{Binding Grade, Converter={x:Static app:Conv.GradeBrush}}" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="Score" Binding="{Binding ScoreText}" SortMemberPath="Score" Width="76" />
+            <DataGridTextColumn Header="Model" Binding="{Binding Name}" Width="1.3*" />
+            <DataGridTextColumn Header="Workspace" Binding="{Binding WorkspaceName}" Width="1.1*" />
+            <DataGridTextColumn Header="Complexity" Binding="{Binding Complexity}" Width="110" />
+            <DataGridTextColumn Header="Errors" Binding="{Binding Errors}" Width="80" />
+            <DataGridTextColumn Header="Warnings" Binding="{Binding Warnings}" Width="96" />
+            <DataGridTextColumn Header="Main issue" Binding="{Binding Note}" Width="2*" />
+          </DataGrid.Columns>
+        </DataGrid>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</UserControl>

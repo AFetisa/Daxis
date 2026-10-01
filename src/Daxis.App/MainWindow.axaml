@@ -109,6 +109,8 @@
                                 IsVisible="{Binding WorkspaceRow, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <ContentControl Content="{Binding SourceControlRow}" ContentTemplate="{StaticResource ItemRowTemplate}"
                                 IsVisible="{Binding SourceControlRow, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <ContentControl Content="{Binding EstateQualityRow}" ContentTemplate="{StaticResource ItemRowTemplate}"
+                                IsVisible="{Binding EstateQualityRow, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <TextBlock Classes="muted" Margin="8,12" TextWrapping="Wrap" IsVisible="{Binding !HasItems}"
                            Text="No semantic models, notebooks or lakehouses in this workspace." />
                 <TextBlock Classes="label" Text="SEMANTIC MODELS" Margin="8,14,0,6" IsVisible="{Binding Models.Count}" />
