@@ -1,6 +1,6 @@
 # Source Control — Fabric Git integration in Daxis
 
-Status: implemented on `feature/source-control` (2026-09-30), pending live testing. Supersedes the first draft (local snapshot only).
+Status: shipped in v0.2.0 (2026-10-01). Repoint still to be live-tested on safe workspaces. Supersedes the first draft (local snapshot only).
 Origin: `Fabric_to_Git` Python experiment (fab CLI export). Its review is kept at the bottom; its export
 engine becomes the **offload** feature below.
 
@@ -77,7 +77,7 @@ crash or closed app resumes or rolls back instead of leaving a disconnected work
 ## Phases
 | # | Scope | Risk | Est. |
 |---|---|---|---|
-| 0 | **Spike on a sandbox tenant (not AGL):** (a) does the Power BI Desktop client token carry Git scopes (`Workspace.GitCommit.All`, `Workspace.GitUpdate.All`)? If not, `DAXIS_CLIENT_ID` + own app registration becomes a documented requirement. (b) confirm `initializeConnection` changes no items. (c) confirm status-after-connect is a faithful preview of the update. (d) find a way to *read* branch-workspace relationships. (e) `percentComplete` on Git LROs. | Unknowns | 0.5 d |
+| 0 | **Spike on a sandbox tenant:** (a) does the Power BI Desktop client token carry Git scopes (`Workspace.GitCommit.All`, `Workspace.GitUpdate.All`)? If not, `DAXIS_CLIENT_ID` + own app registration becomes a documented requirement. (b) confirm `initializeConnection` changes no items. (c) confirm status-after-connect is a faithful preview of the update. (d) find a way to *read* branch-workspace relationships. (e) `percentComplete` on Git LROs. | Unknowns | 0.5 d |
 | 1 | Scan grid, families, staleness, per-workspace status. Read-only, ships alone. | None (read) | 1 d |
 | 2 | Commit / Update with preview, selective commit, explicit conflict policy, stepper + progress. | Medium | 1 d |
 | 3 | Offload unsupported items to the nominated folder (+ PBIX / metadata fallbacks). | Low (local writes) | 1 d |
@@ -104,7 +104,7 @@ pushes from the local machine and never deletes a data-bearing item."* Update RE
 | `sync_log.json` timestamp dirties every run | Log outside the folder |
 | `fabric_to_git_all.py` referenced but missing | Superseded by the Scan grid |
 
-Governance: the `Fabric_to_Git` folder holds AGL content. Nothing from it enters the Daxis repo; tests use synthetic fixtures.
+Governance: nothing from the experiment's exported content enters the Daxis repo; tests use synthetic fixtures.
 
 ## Morning test checklist (live, safe workspaces only)
 Run `.\run.ps1`, sign in, open **Source control** in the sidebar.
