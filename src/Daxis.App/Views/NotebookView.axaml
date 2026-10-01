@@ -58,7 +58,7 @@
         <StackPanel Orientation="Horizontal" Spacing="10">
           <TextBlock Classes="label" Text="LAST RUN" VerticalAlignment="Center" />
           <ProgressBar IsIndeterminate="True" Width="60" Height="2" MinHeight="2" IsVisible="{Binding IsRunning}" VerticalAlignment="Center" />
-          <SelectableTextBlock Text="{Binding RunStatus}" FontSize="12" VerticalAlignment="Center" />
+          <SelectableTextBlock Text="{Binding RunStatus}" FontSize="13" VerticalAlignment="Center" />
         </StackPanel>
       </Border>
 

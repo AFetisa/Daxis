@@ -160,7 +160,7 @@ public static class Editors
                         CompletionKind.Function => "fx", CompletionKind.Measure => "Σ",
                         CompletionKind.Column => "col", CompletionKind.Table => "tbl", _ => "var",
                     },
-                    Width = 24, FontSize = 10, Opacity = 0.55, VerticalAlignment = VerticalAlignment.Center,
+                    Width = 24, FontSize = 11, Opacity = 0.55, VerticalAlignment = VerticalAlignment.Center,
                 },
                 new TextBlock { Text = c.Label, VerticalAlignment = VerticalAlignment.Center },
             },

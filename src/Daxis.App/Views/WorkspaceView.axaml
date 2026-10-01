@@ -27,7 +27,7 @@
             <TabStripItem Content="Memory" />
           </TabStrip>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-            <TextBlock Classes="muted" FontSize="12" Text="{Binding SourcesInfo}" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBlock Classes="muted" FontSize="13" Text="{Binding SourcesInfo}" VerticalAlignment="Center" Margin="0,0,6,0" />
             <Button Classes="ghost" Command="{Binding ReloadCommand}" ToolTip.Tip="Reload">
               <app:Icon Data="{x:Static app:Icons.Refresh}" />
             </Button>
@@ -60,7 +60,7 @@
                   <Border Classes="card" Padding="14,12" Margin="0,0,10,10" Width="176">
                     <StackPanel>
                       <TextBlock Classes="label" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
-                      <TextBlock Text="{Binding Count}" FontSize="24" FontWeight="Medium" LetterSpacing="-0.5" Margin="0,4,0,0" />
+                      <TextBlock Text="{Binding Count}" FontSize="24" FontWeight="Medium" LetterSpacing="-0.3" Margin="0,4,0,0" />
                     </StackPanel>
                   </Border>
                 </DataTemplate>
@@ -71,7 +71,7 @@
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="SEMANTIC MODELS" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="{Binding OrphanModels, StringFormat='{}{0} without a report in this workspace. Double-click a model to open it.'}" />
               </Grid>
               <Border Classes="card" ClipToBounds="True">
@@ -94,7 +94,7 @@
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="REPORTS" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="{Binding ExternalReports, StringFormat='{}{0} read a model in another workspace. Double-click a report to open it.'}" />
               </Grid>
               <Border Classes="card" ClipToBounds="True">
@@ -136,7 +136,7 @@
                 <Style Selector="TextBlock.stat">
                   <Setter Property="FontSize" Value="24" />
                   <Setter Property="FontWeight" Value="Medium" />
-                  <Setter Property="LetterSpacing" Value="-0.5" />
+                  <Setter Property="LetterSpacing" Value="-0.3" />
                   <Setter Property="Margin" Value="0,4,0,0" />
                 </Style>
               </UniformGrid.Styles>
@@ -152,23 +152,23 @@
               <Border Classes="card" Padding="18,16">
                 <StackPanel Spacing="12">
                   <TextBlock Classes="label" Text="MODEL FIELDS USED BY REPORTS, WHOLE WORKSPACE" />
-                  <TextBlock Text="{Binding CoveragePercent}" FontSize="34" FontWeight="Medium" LetterSpacing="-1" />
+                  <TextBlock Text="{Binding CoveragePercent}" FontSize="34" FontWeight="Medium" LetterSpacing="-0.6" />
                   <app:UsageBar Height="10" Primary="{Binding ReportShare}" Secondary="{Binding ModelShare}" />
                   <StackPanel Orientation="Horizontal" Spacing="18">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <Ellipse Width="8" Height="8" Fill="{DynamicResource Brand}" VerticalAlignment="Center" />
-                      <TextBlock FontSize="12" Text="Used in reports" />
+                      <TextBlock FontSize="13" Text="Used in reports" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <Ellipse Width="8" Height="8" Fill="{DynamicResource BrandBorder}" VerticalAlignment="Center" />
-                      <TextBlock FontSize="12" Text="Model only" />
+                      <TextBlock FontSize="13" Text="Model only" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <Ellipse Width="8" Height="8" Fill="{DynamicResource Bg3}" Stroke="{DynamicResource BorderStrong}" VerticalAlignment="Center" />
-                      <TextBlock FontSize="12" Text="Unused" />
+                      <TextBlock FontSize="13" Text="Unused" />
                     </StackPanel>
                   </StackPanel>
-                  <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding CoverageText}" />
+                  <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap" Text="{Binding CoverageText}" />
                 </StackPanel>
               </Border>
               <Border Grid.Column="2" Classes="card" Padding="18,16">
@@ -181,8 +181,8 @@
                           <DataTemplate x:DataType="app:TypeShare">
                             <StackPanel Spacing="4" Margin="0,0,8,10">
                               <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock FontSize="12" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="1" Classes="mono muted" FontSize="12" Text="{Binding Count}" />
+                                <TextBlock FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1" Classes="mono muted" FontSize="13" Text="{Binding Count}" />
                               </Grid>
                               <app:UsageBar Height="4" Primary="{Binding Share}" />
                             </StackPanel>
@@ -190,7 +190,7 @@
                         </ItemsControl.ItemTemplate>
                       </ItemsControl>
                     </ScrollViewer>
-                    <TextBlock Classes="faint" FontSize="12" Text="No visuals analysed yet." IsVisible="{Binding !VisualTypes.Count}" />
+                    <TextBlock Classes="faint" FontSize="13" Text="No visuals analysed yet." IsVisible="{Binding !VisualTypes.Count}" />
                   </Panel>
                 </DockPanel>
               </Border>
@@ -200,7 +200,7 @@
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="BY SEMANTIC MODEL" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="Least used first. Open a model for its own Report usage, diagram and lineage." />
               </Grid>
               <Border Classes="card" Padding="4">
@@ -209,12 +209,12 @@
                     <DataTemplate x:DataType="app:ModelUsageRow">
                       <Grid ColumnDefinitions="2*,90,3*,64,2.4*,Auto" Margin="12,8">
                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontWeight="Medium" />
-                        <TextBlock Grid.Column="1" Classes="muted" FontSize="12" VerticalAlignment="Center"
+                        <TextBlock Grid.Column="1" Classes="muted" FontSize="13" VerticalAlignment="Center"
                                    Text="{Binding Reports, StringFormat='{}{0} report(s)'}" />
                         <app:UsageBar Grid.Column="2" Height="8" Margin="0,0,14,0" VerticalAlignment="Center"
                                       Primary="{Binding Share}" Secondary="{Binding ModelShare}" />
                         <TextBlock Grid.Column="3" Classes="mono" VerticalAlignment="Center" Text="{Binding Percent}" />
-                        <TextBlock Grid.Column="4" Classes="muted" FontSize="12" VerticalAlignment="Center"
+                        <TextBlock Grid.Column="4" Classes="muted" FontSize="13" VerticalAlignment="Center"
                                    Text="{Binding Breakdown}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Breakdown}" />
                         <Button Grid.Column="5" Classes="ghost model-open" Tag="{Binding Item}" ToolTip.Tip="Open model" Margin="8,0,0,0">
                           <app:Icon Data="{x:Static app:Icons.Model}" Width="14" Height="14" />
@@ -230,7 +230,7 @@
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="REPORTS" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="Every report reading a model in this workspace. Double-click to open." />
               </Grid>
               <Border Classes="card" ClipToBounds="True">
@@ -274,7 +274,7 @@
                   </DataGrid.Columns>
                 </DataGrid>
               </Border>
-              <TextBlock Classes="faint" FontSize="12" TextWrapping="Wrap"
+              <TextBlock Classes="faint" FontSize="13" TextWrapping="Wrap"
                          Text="Models are read over the XMLA endpoint (needs a Fabric or Premium capacity). Unused means no analysed report binds the field and nothing in its model depends on it; reports you can't read, Excel and composite-model consumers aren't counted." />
             </StackPanel>
           </StackPanel>
@@ -297,7 +297,7 @@
                 <Style Selector="TextBlock.stat">
                   <Setter Property="FontSize" Value="24" />
                   <Setter Property="FontWeight" Value="Medium" />
-                  <Setter Property="LetterSpacing" Value="-0.5" />
+                  <Setter Property="LetterSpacing" Value="-0.3" />
                   <Setter Property="Margin" Value="0,4,0,0" />
                 </Style>
               </UniformGrid.Styles>
@@ -313,7 +313,7 @@
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="SCHEDULE, NEXT 24 HOURS" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="Bars last each model's typical refresh. The strip on top counts overlaps (amber = more than one at once). Dashed line = now." />
               </Grid>
               <Border Classes="card" Padding="12,10">
@@ -322,14 +322,14 @@
                   <TextBlock Classes="muted" Margin="4,8" Text="No models refresh on a schedule." IsVisible="{Binding !ScheduledModels}" />
                 </Panel>
               </Border>
-              <TextBlock Classes="muted" FontSize="12" Text="{Binding PeakText}" TextWrapping="Wrap" />
+              <TextBlock Classes="muted" FontSize="13" Text="{Binding PeakText}" TextWrapping="Wrap" />
             </StackPanel>
 
             <!-- Per model -->
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="BY SEMANTIC MODEL" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center" Text="Failing first." />
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center" Text="Failing first." />
               </Grid>
               <Border Classes="card" Padding="4">
                 <ItemsControl ItemsSource="{Binding RefreshRows}">
@@ -338,13 +338,13 @@
                       <Grid ColumnDefinitions="1.6*,90,2*,220,Auto" Margin="12,10">
                         <StackPanel Spacing="2" VerticalAlignment="Center">
                           <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
-                          <TextBlock Classes="faint" FontSize="11.5" Text="{Binding Schedule}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Schedule}" />
+                          <TextBlock Classes="faint" FontSize="12.5" Text="{Binding Schedule}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Schedule}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"
+                        <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"
                                    Classes.danger="{Binding Failing}" />
                         <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center" Margin="8,0">
-                          <TextBlock FontSize="12.5" Text="{Binding LastText}" TextTrimming="CharacterEllipsis" />
-                          <TextBlock Classes="muted mono" FontSize="11" Text="{Binding Stats}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock FontSize="13" Text="{Binding LastText}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Classes="muted mono" FontSize="12" Text="{Binding Stats}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                         <app:DurationBars Grid.Column="3" Height="34" Runs="{Binding Runs}" VerticalAlignment="Center" />
                         <Button Grid.Column="4" Classes="ghost model-open" Tag="{Binding Item}" ToolTip.Tip="Open model" Margin="10,0,0,0" VerticalAlignment="Center">
@@ -394,7 +394,7 @@
                 <Style Selector="TextBlock.stat">
                   <Setter Property="FontSize" Value="24" />
                   <Setter Property="FontWeight" Value="Medium" />
-                  <Setter Property="LetterSpacing" Value="-0.5" />
+                  <Setter Property="LetterSpacing" Value="-0.3" />
                   <Setter Property="Margin" Value="0,4,0,0" />
                 </Style>
               </UniformGrid.Styles>
@@ -406,8 +406,8 @@
               <Border Classes="card"><StackPanel><TextBlock Classes="label" Text="IN UNUSED COLUMNS" /><TextBlock Classes="stat" Foreground="{DynamicResource BrandText}" Text="{Binding MemoryReclaim}" /></StackPanel></Border>
             </UniformGrid>
             <StackPanel Spacing="4" Margin="0,-12,0,0">
-              <TextBlock Classes="muted" FontSize="12" Text="{Binding CapacityNote}" TextWrapping="Wrap" />
-              <TextBlock Classes="danger" FontSize="12" IsVisible="{Binding ModelsAtRisk}"
+              <TextBlock Classes="muted" FontSize="13" Text="{Binding CapacityNote}" TextWrapping="Wrap" />
+              <TextBlock Classes="danger" FontSize="13" IsVisible="{Binding ModelsAtRisk}"
                          Text="{Binding ModelsAtRisk, StringFormat='{}{0} model(s) need more than the per-model limit to run a full refresh. Consider incremental refresh or trimming columns.'}" />
             </StackPanel>
 
@@ -415,7 +415,7 @@
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="MODELS BY SIZE" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="Area is memory. Click a model to open it; its Memory page breaks it down by table and column." />
               </Grid>
               <Border Classes="card" Padding="6" Height="300">
@@ -427,7 +427,7 @@
             <StackPanel Spacing="8">
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock Classes="label" Text="HEADROOM PER MODEL" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Classes="faint" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                <TextBlock Grid.Column="1" Classes="faint" FontSize="13" Margin="12,0,0,0" VerticalAlignment="Center"
                            Text="Bar: model size, then the extra a full refresh needs, against the capacity's per-model limit (or the largest model when unknown)." />
               </Grid>
               <Border Classes="card" Padding="4">
@@ -443,9 +443,9 @@
                         <Button Grid.Column="3" Grid.RowSpan="2" Classes="ghost model-open" Tag="{Binding Item}" ToolTip.Tip="Open model" VerticalAlignment="Center">
                           <app:Icon Data="{x:Static app:Icons.Model}" Width="14" Height="14" />
                         </Button>
-                        <TextBlock Grid.Row="1" Classes="faint" FontSize="11.5" Margin="0,3,0,0" Text="{Binding Largest}" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{DynamicResource BrandText}" FontSize="11.5" Margin="0,3,0,0" Text="{Binding Unused}" TextTrimming="CharacterEllipsis" Grid.ColumnSpan="1" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Classes="muted" FontSize="11.5" Margin="0,3,12,0" Text="{Binding Headroom}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Headroom}" />
+                        <TextBlock Grid.Row="1" Classes="faint" FontSize="12.5" Margin="0,3,0,0" Text="{Binding Largest}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{DynamicResource BrandText}" FontSize="12.5" Margin="0,3,0,0" Text="{Binding Unused}" TextTrimming="CharacterEllipsis" Grid.ColumnSpan="1" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Classes="muted" FontSize="12.5" Margin="0,3,12,0" Text="{Binding Headroom}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Headroom}" />
                       </Grid>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
@@ -482,7 +482,7 @@
             </StackPanel>
           </Border>
           <Border Classes="floating" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="16">
-            <TextBlock Classes="faint" FontSize="11.5"
+            <TextBlock Classes="faint" FontSize="12.5"
                        Text="Data sources → semantic models → reports · hover to trace · double-click a model to open it, a report to view it" />
           </Border>
         </Panel>

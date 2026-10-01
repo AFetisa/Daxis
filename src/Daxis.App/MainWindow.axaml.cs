@@ -12,6 +12,8 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        // Subpixel (ClearType-style) glyphs: Inter at UI sizes reads thin and cramped with greyscale antialiasing.
+        Avalonia.Media.RenderOptions.SetTextRenderingMode(this, Avalonia.Media.TextRenderingMode.SubpixelAntialias);
         Opened += async (_, _) =>
         {
             var vm = (MainViewModel)DataContext!;

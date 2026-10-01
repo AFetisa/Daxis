@@ -150,6 +150,7 @@ public sealed partial class SourceControlTab : TabBase
         _fabric = fabric;
         _settings = settings;
         _workspaces = workspaces;
+        _grouping = settings.SourceControlByWorkspace ? 1 : 0;
     }
 
     public override Geometry Icon => Icons.Branch;
@@ -171,6 +172,7 @@ public sealed partial class SourceControlTab : TabBase
     [ObservableProperty] private int _noAccessCount;
     [ObservableProperty] private int _filter; // 0 all, 1 needs attention, 2 connected, 3 not connected
     [ObservableProperty] private string _search = "";
+    [ObservableProperty] private int _grouping; // 0 by repo, 1 by workspace
     public string Thresholds => $"Stale after {_settings.StaleDays} days without a sync, critical after {_settings.CriticalDays}.";
 
     // ── Selected workspace ───────────────────────────────────────────────────
@@ -187,7 +189,7 @@ public sealed partial class SourceControlTab : TabBase
     public bool CanUpdate => Selected?.Status is { } s && (s.Incoming > 0 || s.Conflicts > 0) && (s.Conflicts == 0 || ConflictPolicy > 0);
     public bool CanCommit => Changes.Any(c => c.Selected && c.CanCommit) && !string.IsNullOrWhiteSpace(CommitMessage);
     /// <summary>One green button: update when something is incoming, otherwise commit.</summary>
-    public bool UpdateIsPrimary => Selected?.Status is { Incoming: > 0 } || Selected?.Status is { Conflicts: > 0 };
+    public bool UpdateIsPrimary => CanUpdate;
     public bool HasConflicts => Selected?.Status is { Conflicts: > 0 };
     public string ChangesSummary => Selected?.Status is { } s
         ? s.Clean ? "The workspace and the branch match." : $"{s.Uncommitted} uncommitted · {s.Incoming} incoming · {Plural(s.Conflicts, "conflict")}"
@@ -244,7 +246,7 @@ public sealed partial class SourceControlTab : TabBase
         var cts = _scan = new CancellationTokenSource();
         var workspaces = _workspaces().Where(w => w.Type != "Personal").ToList();
         _rows = workspaces.Select(w => new GitRow(w)).ToList();
-        var keep = Selected?.Workspace.Id;
+        var keep = Selected?.Workspace.Id ?? Workspace.Id;
         Selected = null;
         Regroup();
         IsScanning = true;
@@ -309,6 +311,12 @@ public sealed partial class SourceControlTab : TabBase
     }
 
     partial void OnFilterChanged(int value) => Regroup();
+    partial void OnGroupingChanged(int value)
+    {
+        _settings.SourceControlByWorkspace = value == 1;
+        _settings.Save();
+        Regroup();
+    }
     partial void OnSearchChanged(string value) => Regroup();
 
     void Regroup()
@@ -326,14 +334,18 @@ public sealed partial class SourceControlTab : TabBase
             _ => true,
         };
 
-        var groups = families
-            .Select(f => new GitGroup(f.Label, $"{f.Members.Count} workspace{(f.Members.Count > 1 ? "s" : "")}",
-                f.Members.Select(m => byId[m.WorkspaceId]).Where(Show).ToList()))
-            .Where(g => g.Rows.Count > 0).ToList();
+        var groups = Grouping == 1
+            // By workspace: every workspace A–Z, connected or not; repo and branch stay on each row.
+            ? [new GitGroup("All workspaces A–Z", "", _rows.Where(r => !r.IsLoading && Show(r)).OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList())]
+            : families
+                .Select(f => new GitGroup(f.Label, Plural(f.Members.Count, "workspace"),
+                    f.Members.Select(m => byId[m.WorkspaceId]).Where(Show).ToList()))
+                .ToList();
+        groups = groups.Where(g => g.Rows.Count > 0).ToList();
         var pending = _rows.Where(r => r.IsLoading && Show(r)).ToList();
         if (pending.Count > 0) groups.Insert(0, new GitGroup("Checking…", "", pending));
         var rest = _rows.Where(r => !r.IsLoading && !r.IsConnected && Show(r)).OrderBy(r => r.NoAccess).ThenBy(r => r.Name).ToList();
-        if (rest.Count > 0) groups.Add(new GitGroup("Not connected to Git", $"{rest.Count} workspace{(rest.Count > 1 ? "s" : "")}", rest));
+        if (rest.Count > 0 && Grouping == 0) groups.Add(new GitGroup("Not connected to Git", $"{rest.Count} workspace{(rest.Count > 1 ? "s" : "")}", rest));
 
         Groups.Clear();
         foreach (var g in groups) Groups.Add(g);
