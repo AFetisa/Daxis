@@ -22,6 +22,12 @@ public sealed record StorageInfo(IReadOnlyDictionary<(string Table, string Colum
     public long Of(string table, string column) => Columns.GetValueOrDefault((table, column))?.Total ?? 0;
 }
 
+/// <summary>Rows per table and distinct values per column. Empty when the storage DMVs couldn't be read.</summary>
+public sealed record StorageStats(IReadOnlyDictionary<string, long> Rows, IReadOnlyDictionary<(string Table, string Column), long> Cardinality)
+{
+    public static readonly StorageStats Empty = new(new Dictionary<string, long>(), new Dictionary<(string, string), long>());
+}
+
 public static class ModelStorage
 {
     /// <summary>
@@ -85,6 +91,34 @@ public static class ModelStorage
             tables[key.Item1] = tables.GetValueOrDefault(key.Item1) + dict; // dictionaries aren't segments
         }
         return new StorageInfo(result, tables);
+    }
+
+    /// <summary>
+    /// Row counts per table and distinct values per column from DISCOVER_STORAGE_TABLES. A column's attribute
+    /// hierarchy is stored as table "H$table$column"; its row count is the column's distinct values plus 3 system rows
+    /// (VertiPaq Analyzer's rule). Columns without an attribute hierarchy get no cardinality.
+    /// </summary>
+    public static StorageStats Stats(IEnumerable<IReadOnlyDictionary<string, object?>> columns, IEnumerable<IReadOnlyDictionary<string, object?>> tables)
+    {
+        static string S(IReadOnlyDictionary<string, object?> r, string k) => r.GetValueOrDefault(k)?.ToString() ?? "";
+        var ids = columns.Where(r => S(r, "COLUMN_TYPE") == "BASIC_DATA")
+            .Select(r => (Table: S(r, "DIMENSION_NAME"), Id: S(r, "COLUMN_ID"), Name: S(r, "ATTRIBUTE_NAME")))
+            .Where(c => !c.Name.StartsWith("RowNumber-", StringComparison.Ordinal)).ToList();
+
+        var rows = new Dictionary<string, long>();
+        var cardinality = new Dictionary<(string, string), long>();
+        foreach (var r in tables)
+        {
+            var (table, id) = (S(r, "DIMENSION_NAME"), S(r, "TABLE_ID"));
+            var n = long.TryParse(S(r, "ROWS_COUNT"), out var v) ? v : 0;
+            if (id.StartsWith("H$", StringComparison.Ordinal))
+            {
+                var c = ids.FirstOrDefault(c => c.Table == table && id.EndsWith("$" + c.Id, StringComparison.Ordinal));
+                if (c.Name is not null) cardinality[(table, c.Name)] = Math.Max(0, n - 3);
+            }
+            else if (!id.Contains('$')) rows[table] = rows.GetValueOrDefault(table) + n; // one row per partition
+        }
+        return new StorageStats(rows, cardinality);
     }
 
     public static string Format(long bytes) => bytes switch

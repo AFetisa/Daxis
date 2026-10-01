@@ -36,9 +36,21 @@ public sealed class ModelSession : IDisposable
     public bool HasChanges => Model.HasLocalChanges;
 
     /// <summary>Read-only VertiPaq statistics from the engine's storage DMVs.</summary>
-    public StorageInfo Storage() => ModelStorage.Compute(
-        Query("SELECT DIMENSION_NAME, ATTRIBUTE_NAME, COLUMN_ID, COLUMN_TYPE, DICTIONARY_SIZE FROM $SYSTEM.DISCOVER_STORAGE_TABLE_COLUMNS"),
-        Query("SELECT DIMENSION_NAME, TABLE_ID, COLUMN_ID, USED_SIZE FROM $SYSTEM.DISCOVER_STORAGE_TABLE_COLUMN_SEGMENTS"));
+    public StorageInfo Storage() => ModelStorage.Compute(Query(StorageColumns), Query(StorageSegments));
+
+    /// <summary>Row counts and column cardinality, for the quality rules.</summary>
+    public StorageStats Stats() => ModelStorage.Stats(Query(StorageColumns), Query(StorageTables));
+
+    /// <summary>Reads storage once and scores the model. For scans that don't otherwise need the storage page.</summary>
+    public QualityReport Quality()
+    {
+        var columns = Query(StorageColumns);
+        return ModelQuality.Score(Model, ModelStorage.Compute(columns, Query(StorageSegments)), ModelStorage.Stats(columns, Query(StorageTables)));
+    }
+
+    const string StorageColumns = "SELECT DIMENSION_NAME, ATTRIBUTE_NAME, COLUMN_ID, COLUMN_TYPE, DICTIONARY_SIZE FROM $SYSTEM.DISCOVER_STORAGE_TABLE_COLUMNS";
+    const string StorageSegments = "SELECT DIMENSION_NAME, TABLE_ID, COLUMN_ID, USED_SIZE FROM $SYSTEM.DISCOVER_STORAGE_TABLE_COLUMN_SEGMENTS";
+    const string StorageTables = "SELECT DIMENSION_NAME, TABLE_ID, ROWS_COUNT FROM $SYSTEM.DISCOVER_STORAGE_TABLES";
 
     List<IReadOnlyDictionary<string, object?>> Query(string statement)
     {

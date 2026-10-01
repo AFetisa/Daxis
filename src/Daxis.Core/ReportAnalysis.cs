@@ -273,7 +273,7 @@ public static class Dax
             .OfType<Table>().Distinct().ToList();
     }
 
-    static List<DaxFormatter.Token> Significant(string expression) => DaxFormatter.Tokenize(expression)
+    internal static List<DaxFormatter.Token> Significant(string expression) => DaxFormatter.Tokenize(expression)
         .Where(t => t.Kind is not (DaxFormatter.TokKind.Whitespace or DaxFormatter.TokKind.NewLine
             or DaxFormatter.TokKind.LineComment or DaxFormatter.TokKind.BlockComment))
         .ToList();
