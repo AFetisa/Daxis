@@ -38,21 +38,38 @@ public sealed class ModelSession : IDisposable
     /// <summary>Read-only VertiPaq statistics from the engine's storage DMVs.</summary>
     public StorageInfo Storage() => ModelStorage.Compute(Query(StorageColumns), Query(StorageSegments));
 
-    /// <summary>Row counts and column cardinality, for the quality rules.</summary>
-    public StorageStats Stats() => ModelStorage.Stats(Query(StorageColumns), Query(StorageTables));
-
-    /// <summary>Reads storage once and scores the model. For scans that don't otherwise need the storage page.</summary>
-    public QualityReport Quality()
+    /// <summary>
+    /// Scores the model against the best-practice rules. Pass storage the caller already read to skip re-reading it.
+    /// Holds the connection throughout, so a save can't change the model mid-score.
+    /// </summary>
+    public QualityReport Quality(StorageInfo? storage = null)
     {
-        var columns = Query(StorageColumns);
-        return ModelQuality.Score(Model, ModelStorage.Compute(columns, Query(StorageSegments)), ModelStorage.Stats(columns, Query(StorageTables)));
+        lock (_server)
+        {
+            var stats = StorageStats.Empty;
+            try
+            {
+                var columns = Query(StorageColumns);
+                storage ??= ModelStorage.Compute(columns, Query(StorageSegments));
+                stats = ModelStorage.Stats(columns, Query(StorageTables));
+            }
+            catch (Exception) { } // storage DMVs can be denied; the metadata rules still run
+            return ModelQuality.Score(Model, storage, stats);
+        }
     }
 
     const string StorageColumns = "SELECT DIMENSION_NAME, ATTRIBUTE_NAME, COLUMN_ID, COLUMN_TYPE, DICTIONARY_SIZE FROM $SYSTEM.DISCOVER_STORAGE_TABLE_COLUMNS";
     const string StorageSegments = "SELECT DIMENSION_NAME, TABLE_ID, COLUMN_ID, USED_SIZE FROM $SYSTEM.DISCOVER_STORAGE_TABLE_COLUMN_SEGMENTS";
     const string StorageTables = "SELECT DIMENSION_NAME, TABLE_ID, ROWS_COUNT FROM $SYSTEM.DISCOVER_STORAGE_TABLES";
 
+    // One call at a time: a TOM Server isn't safe for concurrent use, and tabs read storage, score and save in parallel.
+    // Monitor locks are re-entrant, so Quality() can hold the lock across several queries.
     List<IReadOnlyDictionary<string, object?>> Query(string statement)
+    {
+        lock (_server) return QueryLocked(statement);
+    }
+
+    List<IReadOnlyDictionary<string, object?>> QueryLocked(string statement)
     {
         var props = new System.Collections.Hashtable { ["Catalog"] = Model.Database.Name };
         using var reader = _server.ExecuteReader($"<Statement>{System.Security.SecurityElement.Escape(statement)}</Statement>", out var results, props, true)
@@ -69,11 +86,11 @@ public sealed class ModelSession : IDisposable
     }
 
     /// <summary>Commits local edits. On failure they stay local so the user can fix or discard them.</summary>
-    public void Save() => Model.SaveChanges();
+    public void Save() { lock (_server) Model.SaveChanges(); }
 
     public void Discard() => Model.UndoLocalChanges();
 
-    public void Refresh() => Model.Sync(new TOM.SyncOptions());
+    public void Refresh() { lock (_server) Model.Sync(new TOM.SyncOptions()); }
 
     public TOM.Measure AddMeasure(TOM.Table table)
     {
@@ -99,9 +116,13 @@ public sealed class ModelSession : IDisposable
         Model.Tables.SelectMany(t => t.Columns.Where(c => c.Type != TOM.ColumnType.RowNumber).Select(c => (t.Name, c.Name))).ToList(),
         Model.Tables.SelectMany(t => t.Measures.Select(m => m.Name)).ToList());
 
+    /// <summary>Waits for any call in flight, then disconnects. A network call: keep it off the UI thread.</summary>
     public void Dispose()
     {
-        if (_server.Connected) _server.Disconnect();
-        _server.Dispose();
+        lock (_server)
+        {
+            if (_server.Connected) _server.Disconnect();
+            _server.Dispose();
+        }
     }
 }

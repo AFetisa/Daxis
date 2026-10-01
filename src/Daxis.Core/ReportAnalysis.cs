@@ -244,13 +244,7 @@ public static class Dax
             var t = toks[i];
             if (t.Kind != DaxFormatter.TokKind.BracketIdent) continue;
             var name = t.Text.Trim('[', ']');
-            var prev = i > 0 ? toks[i - 1] : null;
-            var table = prev?.Kind switch
-            {
-                DaxFormatter.TokKind.SingleQuotedIdent => model.Tables.Find(prev.Text.Trim('\'')),
-                DaxFormatter.TokKind.Identifier => model.Tables.Find(prev.Text),
-                _ => null,
-            };
+            var table = i > 0 ? TableNamed(model, toks[i - 1]) : null;
             if ((table ?? home)?.Columns.Find(name) is { } col) result.Add(col);
             else if ((measures ??= Measures(model)).GetValueOrDefault(name) is { } m)
                 result.Add(m);
@@ -263,15 +257,17 @@ public static class Dax
     {
         if (string.IsNullOrWhiteSpace(expression)) return [];
         var toks = Significant(expression);
-        return toks.Select((t, i) => t.Kind switch
-            {
-                DaxFormatter.TokKind.SingleQuotedIdent => model.Tables.Find(t.Text.Trim('\'')),
-                DaxFormatter.TokKind.Identifier when i + 1 >= toks.Count || toks[i + 1].Kind != DaxFormatter.TokKind.OpenParen
-                    => model.Tables.Find(t.Text),
-                _ => null,
-            })
-            .OfType<Table>().Distinct().ToList();
+        return toks.Where((t, i) => i + 1 >= toks.Count || toks[i + 1].Kind != DaxFormatter.TokKind.OpenParen)
+            .Select(t => TableNamed(model, t)).OfType<Table>().Distinct().ToList();
     }
+
+    /// <summary>The table a 'Quoted Name' or bare Name token refers to, if any. Model name lookups are case-insensitive.</summary>
+    public static Table? TableNamed(Model model, DaxFormatter.Token t) => t.Kind switch
+    {
+        DaxFormatter.TokKind.SingleQuotedIdent => model.Tables.Find(t.Text.Trim('\'')),
+        DaxFormatter.TokKind.Identifier => model.Tables.Find(t.Text),
+        _ => null,
+    };
 
     internal static List<DaxFormatter.Token> Significant(string expression) => DaxFormatter.Tokenize(expression)
         .Where(t => t.Kind is not (DaxFormatter.TokKind.Whitespace or DaxFormatter.TokKind.NewLine

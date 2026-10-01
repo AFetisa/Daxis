@@ -27,7 +27,7 @@ public sealed record Complexity(int Index, string Band, IReadOnlyList<Complexity
 }
 
 public sealed record QualityReport(double Score, string Grade, string? CapReason, IReadOnlyList<AreaScore> Areas,
-    IReadOnlyList<Finding> Findings, IReadOnlyList<RuleOutcome> Rules, Complexity Complexity)
+    IReadOnlyList<Finding> Findings, IReadOnlyList<RuleOutcome> Rules, Complexity Complexity, bool StorageRead)
 {
     public int Errors => Findings.Count(f => !f.Suppressed && f.Severity == Severity.Error);
     public int Warnings => Findings.Count(f => !f.Suppressed && f.Severity == Severity.Warning);
@@ -60,9 +60,6 @@ public static class ModelQuality
     static double Weight(Severity s) => s switch { Severity.Error => 10, Severity.Warning => 3, _ => 1 };
 
     public static string Grade(double score) => score >= 90 ? "A" : score >= 80 ? "B" : score >= 70 ? "C" : score >= 60 ? "D" : "F";
-
-    public static IReadOnlyList<(string Id, QualityArea Area, Severity Severity, string Title, string Advice)> Catalogue =>
-        Rules.Select(r => (r.Id, r.Area, r.Severity, r.Title, r.Advice)).ToList();
 
     public static QualityReport Score(Model model, StorageInfo? storage = null, StorageStats? stats = null)
     {
@@ -111,7 +108,7 @@ public static class ModelQuality
 
         var ordered = findings.OrderBy(f => f.Suppressed).ThenByDescending(f => f.Severity).ThenBy(f => f.Area).ThenBy(f => f.RuleId)
             .ThenBy(f => f.Table).ThenBy(f => f.Object).ToList();
-        return new QualityReport(overall, Grade(overall), cap, areas, ordered, outcomes, Measure(x));
+        return new QualityReport(overall, Grade(overall), cap, areas, ordered, outcomes, Measure(x), x.HasStats);
     }
 
     public static QualityRollup Rollup(IReadOnlyCollection<QualityReport> reports)
@@ -270,12 +267,7 @@ public static class ModelQuality
             return t;
         }
 
-        public Table? TableNamed(Token t) => t.Kind switch
-        {
-            TokKind.SingleQuotedIdent => Model.Tables.Find(t.Text.Trim('\'')),
-            TokKind.Identifier => Model.Tables.Find(t.Text),
-            _ => null,
-        };
+        public Table? TableNamed(Token t) => Dax.TableNamed(Model, t);
 
         /// <summary>Objects some expression, relationship, sort-by or hierarchy points at.</summary>
         public HashSet<NamedMetadataObject> Referenced => _referenced ??= BuildReferenced();

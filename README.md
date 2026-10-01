@@ -40,6 +40,12 @@ Windows and Linux. Free for individuals and small businesses.
 - **Offload** items Git can't track (dashboards, datamarts, dataflows Gen1…) to a folder you choose, in the Fabric Git layout.
 - **Repoint a workspace to another branch without losing anything:** refuses if anything is uncommitted, backs up every item locally, previews exactly what the branch would add, overwrite or delete, never deletes a lakehouse, warehouse or database, and puts the original branch back if you cancel or anything fails (even after a crash).
 
+**Quality** (best-practice scoring, live over XMLA)
+- **62 rules** from Microsoft's Best Practice Analyzer, Microsoft Learn and SQLBI: star schema and date tables, relationship direction and cardinality, DAX patterns, storage and data types, descriptions, hidden keys and RLS.
+- **A 0–100 score and A–F grade** per area and overall, plus a **complexity index** that shows what makes a model hard to maintain.
+- **Per model** on its Quality page, **per workspace** as a grade column, and **across the estate**: tick workspaces, scan, drill down.
+- **Export** to HTML, Markdown, CSV or JSON. Reads metadata and storage statistics only, never data.
+
 **Also:** notebooks (edit, save, run), lakehouses (tables and files), Ctrl+K workspace search, light and dark themes.
 
 <table>

@@ -246,7 +246,6 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
     [ObservableProperty] private int _qualityArea;     // 0 all, then QualityArea + 1
     [ObservableProperty] private string _qualitySearch = "";
     public event Action<string>? ExportRequested;
-    Task _storageLoad = Task.CompletedTask;
 
     partial void OnQualityChanged(QualityReport? value) => ApplyQualityFilter();
     partial void OnQualitySeverityChanged(int value) => ApplyQualityFilter();
@@ -277,16 +276,12 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
         try
         {
             Commit();
-            await _storageLoad; // one XMLA query at a time on a connection
-            StorageStats stats;
-            try { stats = await Task.Run(session.Stats); }
-            catch { stats = StorageStats.Empty; }
             var storage = Storage;
-            var report = await Task.Run(() => ModelQuality.Score(session.Model, storage, stats));
+            var report = await Task.Run(() => session.Quality(storage));
             if (session != _session) return; // reconnected meanwhile
             Quality = report;
             QualityFiles.Reports[Item.Id] = report;
-            QualityInfo = (stats.Rows.Count == 0 ? "Storage statistics unavailable, so size and cardinality rules were skipped. " : "") +
+            QualityInfo = (report.StorageRead ? "" : "Storage statistics unavailable, so size and cardinality rules were skipped. ") +
                 $"{report.Rules.Count} rules applied at {DateTime.Now:HH:mm}" + (IsDirty ? " · includes unsaved changes" : "");
         }
         catch (Exception e) { QualityInfo = "Couldn't score the model: " + (e.InnerException?.Message ?? e.Message); }
@@ -348,7 +343,7 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
 
     public override Task LoadAsync() => Busy("Connecting to the XMLA endpoint…", async () =>
     {
-        _session?.Dispose();
+        if (_session is { } old) _ = Task.Run(old.Dispose); // waits for any query in flight
         var session = await Task.Run(() => ModelSession.Connect(Workspace.DisplayName, Item.Id, Item.DisplayName, () =>
         {
             var r = auth.AcquireAsync().GetAwaiter().GetResult();
@@ -356,7 +351,7 @@ public sealed partial class ModelTab(FabricItem item, Workspace ws, Auth auth, F
         }));
         Attach(session);
         _reportsLoad = LoadReportsAsync();
-        _storageLoad = LoadStorageAsync(session);
+        _ = LoadStorageAsync(session);
         _ = LoadRefreshAsync();
     });
 

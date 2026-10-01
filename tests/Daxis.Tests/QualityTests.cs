@@ -86,6 +86,7 @@ public sealed class QualityTests
             """ });
         sales.Measures.Add(new Measure { Name = "Commented", FormatString = "0", Description = "x",
             Expression = "// IFERROR(1/0) here is only a comment\n\"FILTER(ALL(x))\" & SUM ( Sales[Amount] )" });
+        sales.Measures.Add(new Measure { Name = "LowerCase", FormatString = "0", Description = "x", Expression = "MAX ( sales[Amount] )" }); // names are case-insensitive
 
         var r = ModelQuality.Score(m);
         var bad = r.Findings.Where(f => f.Object == "Bad").Select(f => f.RuleId).ToList();
@@ -93,7 +94,7 @@ public sealed class QualityTests
         Assert.Contains("DAX-05", bad); // bare divide
         Assert.Contains("DAX-07", bad); // FILTER(ALL()) in CALCULATE
         Assert.Contains("DAX-17", bad); // unused VAR
-        Assert.DoesNotContain(r.Findings, f => f.Object == "Commented");
+        Assert.DoesNotContain(r.Findings, f => f.Object is "Commented" or "LowerCase");
     }
 
     [Fact]

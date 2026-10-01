@@ -17,7 +17,7 @@
           </StackPanel>
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
             <Button Content="Cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsScanning}" />
-            <Button ToolTip.Tip="Save the models in view">
+            <Button ToolTip.Tip="Save the models in view" IsEnabled="{Binding Models.Count}">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <app:Icon Data="{x:Static app:Icons.Download}" Width="14" Height="14" />
                 <TextBlock Text="Export" />

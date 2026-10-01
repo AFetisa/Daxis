@@ -264,13 +264,7 @@ public sealed partial class WorkspaceTab(FabricItem item, Workspace ws, Auth aut
                 var storage = _storage.GetValueOrDefault(m.Id);
                 try
                 {
-                    QualityFiles.Reports[m.Id] = await Task.Run(() =>
-                    {
-                        StorageStats stats;
-                        try { stats = session.Stats(); }
-                        catch { stats = StorageStats.Empty; }
-                        return ModelQuality.Score(session.Model, storage, stats);
-                    });
+                    QualityFiles.Reports[m.Id] = await Task.Run(() => session.Quality(storage));
                 }
                 catch (Exception e) { _modelErrors[m.Id] = e.Message; }
             }

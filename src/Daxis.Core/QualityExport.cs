@@ -44,8 +44,14 @@ public static class QualityExport
         return sb.ToString();
     }
 
-    static void Row(StringBuilder sb, IEnumerable<string> cells) =>
-        sb.AppendLine(string.Join(",", cells.Select(c => c.IndexOfAny([',', '"', '\n', '\r']) >= 0 ? $"\"{c.Replace("\"", "\"\"")}\"" : c)));
+    static void Row(StringBuilder sb, IEnumerable<string> cells) => sb.AppendLine(string.Join(",", cells.Select(Cell)));
+
+    /// <summary>Quotes when needed, and stops spreadsheets running a model name like "=HYPERLINK(...)" as a formula.</summary>
+    static string Cell(string c)
+    {
+        if (c.Length > 0 && c[0] is '=' or '+' or '-' or '@' && !double.TryParse(c, out _)) c = "'" + c;
+        return c.IndexOfAny([',', '"', '\n', '\r']) >= 0 ? $"\"{c.Replace("\"", "\"\"")}\"" : c;
+    }
 
     public static string Markdown(IReadOnlyList<ScoredModel> models)
     {

@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+**Quality** — best-practice scoring for semantic models, from one model up to every workspace you can see.
+- 62 rules drawn from Microsoft's Best Practice Analyzer, Microsoft Learn modelling and DAX guidance, and SQLBI, across architecture, relationships, calculations, performance and governance. Each finding says how to fix it.
+- A 0–100 score and A–F grade per area and overall. Storage rules weigh by memory, so one huge column counts more than many tiny ones. Any error caps a model at C; three error rules, a broken measure or mismatched relationship keys cap it at D.
+- A separate complexity index (Low to Very high) from ten factors, with the main drivers shown.
+- Model: a new Quality page with filterable findings; double-click one to open the object.
+- Workspace: Check quality adds a grade to every model.
+- Estate quality: tick workspaces on capacity, scan them over XMLA, and drill from estate to workspace to model.
+- Export to HTML, Markdown, CSV or JSON. Objects carrying Tabular Editor's Best Practice Analyzer ignore annotation are reported as suppressed, not scored.
+
+Reads metadata and storage statistics only, never data. Weights and grade bands are a starting point with no published standard behind them; expect to tune them.
+
 ## 0.2.0 — 2026-10-01
 
 **Source control** — a new tab that drives Fabric Git integration across every workspace you can see.
