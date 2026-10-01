@@ -33,6 +33,13 @@ Windows and Linux. Free for individuals and small businesses.
 - **Refresh health** and per-table freshness.
 - **Edit** DAX and Power Query with IntelliSense and formatters. **Every change is reviewed** before/after, and nothing is written until you confirm.
 
+**Source control** (Fabric Git integration, across every workspace you can see)
+- **Scan:** which workspaces are on Git, the repo, folder and branch each uses, branch workspaces and their source, and workspaces sharing one branch.
+- **Freshness:** flags workspaces not synced for a week (stale) or a month, never initialised, or in conflict (needs attention).
+- **Update from Git / Commit to Git** with the item list first, selective commits and an explicit choice for conflicts.
+- **Offload** items Git can't track (dashboards, datamarts, dataflows Gen1…) to a folder you choose, in the Fabric Git layout.
+- **Repoint a workspace to another branch without losing anything:** refuses if anything is uncommitted, backs up every item locally, previews exactly what the branch would add, overwrite or delete, never deletes a lakehouse, warehouse or database, and puts the original branch back if you cancel or anything fails (even after a crash).
+
 **Also:** notebooks (edit, save, run), lakehouses (tables and files), Ctrl+K workspace search, light and dark themes.
 
 <table>
@@ -82,12 +89,14 @@ Linux needs a desktop session. Minimal images and WSL may also need `sudo apt in
 - A work or school account with access to the workspace.
 - For semantic models: a workspace on **Fabric, Premium or PPU** capacity with the **XMLA endpoint** enabled (read-write to edit), and Contributor or higher.
 - Report usage reads report definitions, which Fabric only allows with **edit rights on the report**.
+- Source control: Git integration enabled in the tenant, your Git account set up in the workspace's Source control panel, **Contributor** to see status, commit and update, **Admin** to repoint a branch. If Git calls are refused for missing permissions, register your own Entra app with the Fabric `Workspace.ReadWrite.All`, `Workspace.GitCommit.All` and `Workspace.GitUpdate.All` delegated scopes and point Daxis at it with `DAXIS_CLIENT_ID`.
 
 ## Security
 
 - **No Daxis server, no telemetry.** Daxis only talks to Microsoft sign-in, Fabric, Power BI and OneLake.
 - **Tokens stay on your machine** (DPAPI-encrypted on Windows, owner-only on Linux) and are never sent to any other host.
 - **Nothing changes in Fabric without your confirmation.**
+- **Git credentials never touch Daxis.** Fabric talks to GitHub or Azure DevOps itself; Daxis never pushes from your machine. Offloads and backups are written only to the folder you pick.
 - Sign-in uses the Power BI Desktop public client. To use your own Entra app, set `DAXIS_CLIENT_ID`. `DAXIS_HOME` moves the data folder.
 
 Details and vulnerability reporting: [SECURITY.md](SECURITY.md).

@@ -17,6 +17,28 @@ public static class Conv
         return app.TryGetResource(key, app.ActualThemeVariant, out var b) ? b as Avalonia.Media.IBrush : null;
     });
 
+    /// <summary>Git freshness → dot colour: fresh brand, stale warning, critical danger, unknown faint.</summary>
+    public static readonly IValueConverter FreshBrush = new FuncValueConverter<Daxis.Core.Freshness, Avalonia.Media.IBrush?>(f =>
+    {
+        var app = Avalonia.Application.Current!;
+        var key = f switch
+        {
+            Daxis.Core.Freshness.Fresh => "Brand",
+            Daxis.Core.Freshness.Stale => "Warning",
+            Daxis.Core.Freshness.Critical => "Danger",
+            _ => "FgFaint",
+        };
+        return app.TryGetResource(key, app.ActualThemeVariant, out var b) ? b as Avalonia.Media.IBrush : null;
+    });
+
+    public static readonly IValueConverter FreshText = new FuncValueConverter<Daxis.Core.Freshness, string>(f => f switch
+    {
+        Daxis.Core.Freshness.Fresh => "Fresh",
+        Daxis.Core.Freshness.Stale => "Stale",
+        Daxis.Core.Freshness.Critical => "Needs attention",
+        _ => "",
+    });
+
     public static readonly IValueConverter Bytes = new FuncValueConverter<long, string>(Format);
 
     internal static string Format(long b) => b switch
